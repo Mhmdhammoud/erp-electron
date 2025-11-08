@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -76,6 +77,7 @@ const initialFormData: ProductFormData = {
 };
 
 export default function Products() {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -245,7 +247,7 @@ export default function Products() {
                   className="pl-10"
                 />
               </div>
-              <Button onClick={() => handleOpenDialog()} size="lg">
+              <Button onClick={() => navigate('/products/new')} size="lg">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Product
               </Button>
@@ -268,7 +270,7 @@ export default function Products() {
                     : 'Create your first product to get started'}
                 </p>
                 {!searchTerm && (
-                  <Button onClick={() => handleOpenDialog()}>
+                  <Button onClick={() => navigate('/products/new')}>
                     <Plus className="w-4 h-4 mr-2" />
                     Add Product
                   </Button>

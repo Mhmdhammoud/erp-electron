@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -69,6 +70,7 @@ const ORDER_WIZARD_STEPS = [
 ];
 
 export default function Orders() {
+  const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
@@ -289,7 +291,7 @@ export default function Orders() {
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={handleOpenCreateDialog}>
+            <Button onClick={() => navigate('/orders/new')}>
               <Plus className="w-4 h-4 mr-2" />
               Create Order
             </Button>

@@ -16,9 +16,13 @@ import { Component, ErrorInfo, ReactNode, useEffect } from 'react';
 // Pages
 import Dashboard from './pages/Dashboard';
 import Products from './pages/Products';
+import ProductCreate from './pages/ProductCreate';
 import Customers from './pages/Customers';
+import CustomerCreate from './pages/CustomerCreate';
 import Orders from './pages/Orders';
+import OrderCreate from './pages/OrderCreate';
 import Invoices from './pages/Invoices';
+import InvoiceCreate from './pages/InvoiceCreate';
 import Settings from './pages/Settings';
 
 const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
@@ -138,9 +142,13 @@ function App() {
                     <Route path="/" element={<Navigate to="/dashboard" replace />} />
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/products" element={<Products />} />
+                    <Route path="/products/new" element={<ProductCreate />} />
                     <Route path="/customers" element={<Customers />} />
+                    <Route path="/customers/new" element={<CustomerCreate />} />
                     <Route path="/orders" element={<Orders />} />
+                    <Route path="/orders/new" element={<OrderCreate />} />
                     <Route path="/invoices" element={<Invoices />} />
+                    <Route path="/invoices/new" element={<InvoiceCreate />} />
                     <Route path="/settings" element={<Settings />} />
                   </Routes>
                 </Layout>

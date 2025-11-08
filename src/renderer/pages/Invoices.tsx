@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -42,6 +43,7 @@ import { useToast } from '../hooks/use-toast';
 import { PaymentStatus, PaymentMethod } from '../utils/constants';
 
 export default function Invoices() {
+  const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
@@ -276,7 +278,7 @@ export default function Invoices() {
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={handleOpenCreateDialog}>
+            <Button onClick={() => navigate('/invoices/new')}>
               <Plus className="w-4 h-4 mr-2" />
               Create Invoice
             </Button>
