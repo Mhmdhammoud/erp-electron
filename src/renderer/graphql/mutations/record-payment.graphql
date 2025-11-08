@@ -1,0 +1,13 @@
+mutation RecordPayment($input: RecordPaymentInput!) {
+  recordPayment(input: $input) {
+    invoice {
+      id
+      paid_amount_usd
+      payment_status
+    }
+    error {
+      field
+      message
+    }
+  }
+}

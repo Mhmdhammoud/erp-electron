@@ -1,0 +1,26 @@
+mutation CreateInvoice($input: CreateInvoiceInput!) {
+  createInvoice(input: $input) {
+    invoice {
+      id
+      invoice_number
+      order_id
+      customer_id
+      items {
+        product_id
+        product_name
+        quantity
+        unit_price_usd
+        subtotal_usd
+      }
+      total_usd
+      paid_amount_usd
+      payment_status
+      due_date
+      notes
+    }
+    error {
+      field
+      message
+    }
+  }
+}
