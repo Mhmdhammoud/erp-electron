@@ -1,0 +1,27 @@
+mutation UpdateTenantSettings($input: UpdateTenantInput!) {
+  updateTenantSettings(input: $input) {
+    data {
+      id
+      name
+      branding {
+        logoUrl
+        primaryColor
+        invoiceFooter
+      }
+      currencyConfig {
+        exchangeRate
+      }
+      businessInfo {
+        address
+        phone
+        email
+        taxId
+      }
+      updated_at
+    }
+    error {
+      field
+      message
+    }
+  }
+}

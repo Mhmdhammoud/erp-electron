@@ -43,9 +43,6 @@ A modern, multi-tenant retail ERP system built with **Electron**, **React**, **T
 
    # GraphQL API
    VITE_GRAPHQL_ENDPOINT=http://localhost:3000/graphql
-
-   # For code generation
-   GRAPHQL_ENDPOINT=http://localhost:3000/graphql
    ```
 
 ## 🏃 Development
@@ -110,6 +107,8 @@ erp-electron/
 │       │   ├── common/       # Reusable components
 │       │   └── layout/       # Layout components
 │       ├── graphql/
+│       │   ├── queries/      # GraphQL query files (.graphql)
+│       │   ├── mutations/    # GraphQL mutation files (.graphql)
 │       │   └── client.ts     # Apollo Client setup
 │       ├── hooks/            # Custom React hooks
 │       ├── pages/            # Page components
@@ -164,6 +163,7 @@ erp-electron/
 | `npm run electron:dev` | Run Electron in development |
 | `npm run electron:build` | Build Electron app |
 | `npm run codegen` | Generate TypeScript from GraphQL |
+| `npm run codegen:watch` | Watch GraphQL files and regenerate |
 | `npm run lint` | Lint code with ESLint |
 | `npm run format` | Format code with Prettier |
 
@@ -203,9 +203,138 @@ erp-electron/
 
 ### Creating GraphQL Queries
 
-1. Add query in `src/renderer/graphql/queries/`
-2. Run `npm run codegen` to generate types
-3. Use generated hooks in your components
+The project uses GraphQL Code Generator to create type-safe hooks from `.graphql` files.
+
+**1. Create a new query file:**
+
+Create a `.graphql` file in `src/renderer/graphql/queries/`:
+
+```graphql
+# src/renderer/graphql/queries/get-example.graphql
+query GetExample($filter: ExampleFilterInput) {
+  examples(filter: $filter) {
+    data {
+      id
+      name
+      description
+    }
+    error {
+      field
+      message
+    }
+  }
+}
+```
+
+**2. Generate TypeScript types and hooks:**
+
+```bash
+npm run codegen
+```
+
+This generates:
+- TypeScript types for your query
+- React hooks (e.g., `useGetExampleQuery`)
+- All types in `src/renderer/types/generated.ts`
+
+**3. Use the generated hook in your component:**
+
+```tsx
+import { useGetExampleQuery } from '../types/generated';
+
+function MyComponent() {
+  const { data, loading, error } = useGetExampleQuery({
+    variables: { filter: { search: 'test' } }
+  });
+
+  const items = data?.examples?.data || [];
+
+  return (
+    <div>
+      {loading && <p>Loading...</p>}
+      {items.map(item => <div key={item.id}>{item.name}</div>)}
+    </div>
+  );
+}
+```
+
+**Watch mode for development:**
+
+```bash
+npm run codegen:watch
+```
+
+This automatically regenerates types whenever you modify `.graphql` files.
+
+### Creating GraphQL Mutations
+
+**1. Create a new mutation file:**
+
+Create a `.graphql` file in `src/renderer/graphql/mutations/`:
+
+```graphql
+# src/renderer/graphql/mutations/create-example.graphql
+mutation CreateExample($input: CreateExampleInput!) {
+  createExample(input: $input) {
+    data {
+      id
+      name
+      created_at
+    }
+    error {
+      field
+      message
+    }
+  }
+}
+```
+
+**2. Run codegen:**
+
+```bash
+npm run codegen
+```
+
+**3. Use the generated mutation hook:**
+
+```tsx
+import { useCreateExampleMutation } from '../types/generated';
+
+function CreateForm() {
+  const [createExample, { loading }] = useCreateExampleMutation();
+
+  const handleSubmit = async (formData) => {
+    const { data } = await createExample({
+      variables: {
+        input: { name: formData.name }
+      }
+    });
+
+    if (data?.createExample?.error) {
+      console.error(data.createExample.error);
+    } else {
+      console.log('Created:', data?.createExample?.data);
+    }
+  };
+
+  return <form onSubmit={handleSubmit}>...</form>;
+}
+```
+
+### GraphQL Directory Structure
+
+```
+src/renderer/graphql/
+├── queries/              # GraphQL queries (.graphql files)
+│   ├── get-products.graphql
+│   ├── get-customers.graphql
+│   └── my-tenant.graphql
+├── mutations/            # GraphQL mutations (.graphql files)
+│   ├── create-product.graphql
+│   ├── update-product.graphql
+│   └── create-order.graphql
+└── client.ts            # Apollo Client configuration
+```
 
 ### Using HeroUI Components
 

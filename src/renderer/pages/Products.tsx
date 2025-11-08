@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useQuery, gql } from '@apollo/client';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Table from '../components/common/Table';
@@ -7,31 +6,11 @@ import Badge from '../components/common/Badge';
 import { Plus, Search, Edit, Trash } from 'lucide-react';
 import { useCurrency } from '../hooks/useCurrency';
 import { STATUS_COLORS } from '../utils/constants';
-
-const GET_PRODUCTS_QUERY = gql`
-  query GetProducts($filter: ProductFilterInput) {
-    products(filter: $filter) {
-      data {
-        id
-        sku
-        name
-        category
-        price_usd
-        quantity_in_stock
-        reorder_level
-        status
-      }
-      error {
-        field
-        message
-      }
-    }
-  }
-`;
+import { useGetProductsQuery } from '../types/generated';
 
 export default function Products() {
   const [searchTerm, setSearchTerm] = useState('');
-  const { data, loading } = useQuery(GET_PRODUCTS_QUERY, {
+  const { data, loading } = useGetProductsQuery({
     variables: { filter: { search: searchTerm } },
   });
 

@@ -1,39 +1,4 @@
-import { useQuery } from '@apollo/client';
-import { gql } from '@apollo/client';
-
-const MY_TENANT_QUERY = gql`
-  query MyTenant {
-    myTenant {
-      data {
-        id
-        name
-        email
-        phone
-        website
-        branding {
-          logoUrl
-          primaryColor
-          invoiceFooter
-          companyAddress
-        }
-        currencyConfig {
-          baseCurrency
-          secondaryCurrency
-          exchangeRate
-          updatedAt
-        }
-        language
-        status
-        createdAt
-        updatedAt
-      }
-      error {
-        field
-        message
-      }
-    }
-  }
-`;
+import { useMyTenantQuery } from '../types/generated';
 
 export interface TenantBranding {
   logoUrl?: string;
@@ -64,7 +29,7 @@ export interface Tenant {
 }
 
 export function useTenant() {
-  const { data, loading, error, refetch } = useQuery(MY_TENANT_QUERY, {
+  const { data, loading, error, refetch } = useMyTenantQuery({
     fetchPolicy: 'cache-and-network',
   });
 

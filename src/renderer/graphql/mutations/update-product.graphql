@@ -1,0 +1,21 @@
+mutation UpdateProduct($id: String!, $input: UpdateProductInput!) {
+  updateProduct(id: $id, input: $input) {
+    data {
+      id
+      sku
+      name
+      category
+      price_usd
+      quantity_in_stock
+      reorder_level
+      status
+      barcode
+      description
+      updated_at
+    }
+    error {
+      field
+      message
+    }
+  }
+}

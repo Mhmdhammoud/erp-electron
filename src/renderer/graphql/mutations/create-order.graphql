@@ -1,0 +1,22 @@
+mutation CreateOrder($input: CreateOrderInput!) {
+  createOrder(input: $input) {
+    data {
+      id
+      customer_id
+      items {
+        product_id
+        quantity
+        unit_price_usd
+        subtotal_usd
+      }
+      total_usd
+      status
+      currency
+      created_at
+    }
+    error {
+      field
+      message
+    }
+  }
+}

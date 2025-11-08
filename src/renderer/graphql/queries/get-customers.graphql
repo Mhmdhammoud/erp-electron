@@ -1,0 +1,19 @@
+query GetCustomers($filter: CustomerFilterInput) {
+  customers(filter: $filter) {
+    data {
+      id
+      name
+      email
+      phone
+      address
+      status
+      total_purchases_usd
+      created_at
+      updated_at
+    }
+    error {
+      field
+      message
+    }
+  }
+}

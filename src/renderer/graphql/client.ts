@@ -23,18 +23,19 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
   }
 });
 
-// Auth link - will be updated by AuthProvider
-let authToken: string | null = null;
+// Token getter function - will be set by AuthProvider
+let getAuthToken: (() => Promise<string | null>) | null = null;
 
-export const setAuthToken = (token: string | null) => {
-  authToken = token;
+export const setAuthTokenGetter = (tokenGetter: () => Promise<string | null>) => {
+  getAuthToken = tokenGetter;
 };
 
 const authLink = setContext(async (_, { headers }) => {
+  const token = getAuthToken ? await getAuthToken() : null;
   return {
     headers: {
       ...headers,
-      authorization: authToken ? `Bearer ${authToken}` : '',
+      authorization: token ? `Bearer ${token}` : '',
     },
   };
 });

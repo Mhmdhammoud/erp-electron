@@ -1,6 +1,6 @@
 import { useAuth as useClerkAuth, useUser } from '@clerk/clerk-react';
 import { useEffect } from 'react';
-import { setAuthToken } from '../graphql/client';
+import { setAuthTokenGetter } from '../graphql/client';
 
 export interface AuthUser {
   userId: string;
@@ -14,18 +14,15 @@ export function useAuth() {
   const { getToken, isLoaded, isSignedIn } = useClerkAuth();
   const { user } = useUser();
 
-  // Update auth token when user changes
+  // Set token getter function for Apollo Client
   useEffect(() => {
-    const updateToken = async () => {
-      if (isSignedIn) {
-        const token = await getToken();
-        setAuthToken(token);
-      } else {
-        setAuthToken(null);
-      }
-    };
-
-    updateToken();
+    if (isSignedIn) {
+      setAuthTokenGetter(async () => {
+        return await getToken();
+      });
+    } else {
+      setAuthTokenGetter(async () => null);
+    }
   }, [isSignedIn, getToken]);
 
   if (!isLoaded || !user) {
