@@ -40,7 +40,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': path.resolve(__dirname, './src/renderer'),
       '@/components': path.resolve(__dirname, './src/renderer/components'),
       '@/pages': path.resolve(__dirname, './src/renderer/pages'),
       '@/hooks': path.resolve(__dirname, './src/renderer/hooks'),
@@ -48,6 +48,7 @@ export default defineConfig({
       '@/graphql': path.resolve(__dirname, './src/renderer/graphql'),
       '@/utils': path.resolve(__dirname, './src/renderer/utils'),
       '@/types': path.resolve(__dirname, './src/renderer/types'),
+      '@/lib': path.resolve(__dirname, './src/renderer/lib'),
     },
   },
   server: {
