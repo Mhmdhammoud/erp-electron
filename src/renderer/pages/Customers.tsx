@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -70,6 +71,7 @@ const initialFormData: CustomerFormData = {
 };
 
 export default function Customers() {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -275,7 +277,7 @@ export default function Customers() {
                 className="pl-10"
               />
             </div>
-            <Button onClick={() => handleOpenDialog()}>
+            <Button onClick={() => navigate('/customers/new')}>
               <Plus className="w-4 h-4 mr-2" />
               Add Customer
             </Button>
