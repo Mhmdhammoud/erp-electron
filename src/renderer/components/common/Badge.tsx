@@ -1,27 +1,24 @@
+import { Chip, ChipProps } from '@heroui/react';
 import { ReactNode } from 'react';
 
 interface BadgeProps {
-  children: ReactNode;
-  variant?: 'success' | 'warning' | 'danger' | 'info' | 'gray';
-  className?: string;
+  readonly children: ReactNode;
+  readonly variant?: 'success' | 'warning' | 'danger' | 'info' | 'gray';
+  readonly className?: string;
 }
 
-export default function Badge({
-  children,
-  variant = 'gray',
-  className = '',
-}: BadgeProps) {
-  const variants = {
-    success: 'badge-success',
-    warning: 'badge-warning',
-    danger: 'badge-danger',
-    info: 'badge-info',
-    gray: 'badge-gray',
+export default function Badge({ children, variant = 'gray', className = '' }: BadgeProps) {
+  const colorMap: Record<string, ChipProps['color']> = {
+    success: 'success',
+    warning: 'warning',
+    danger: 'danger',
+    info: 'primary',
+    gray: 'default',
   };
 
   return (
-    <span className={`badge ${variants[variant]} ${className}`}>
+    <Chip color={colorMap[variant]} variant="flat" size="sm" className={className}>
       {children}
-    </span>
+    </Chip>
   );
 }

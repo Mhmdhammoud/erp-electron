@@ -1,6 +1,6 @@
 query GetProducts($filter: ProductFilterInput) {
   products(filter: $filter) {
-    data {
+    products {
       id
       sku
       name
@@ -11,12 +11,13 @@ query GetProducts($filter: ProductFilterInput) {
       status
       barcode
       description
-      created_at
-      updated_at
     }
     error {
       field
       message
     }
+    length
+    page
+    limit
   }
 }

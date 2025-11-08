@@ -1,3 +1,12 @@
+import {
+  Table as HeroTable,
+  TableHeader,
+  TableColumn,
+  TableBody,
+  TableRow,
+  TableCell,
+  Spinner,
+} from '@heroui/react';
 import { ReactNode } from 'react';
 
 interface Column<T> {
@@ -8,10 +17,10 @@ interface Column<T> {
 }
 
 interface TableProps<T> {
-  data: T[];
-  columns: Column<T>[];
-  isLoading?: boolean;
-  emptyMessage?: string;
+  readonly data: T[];
+  readonly columns: Column<T>[];
+  readonly isLoading?: boolean;
+  readonly emptyMessage?: string;
 }
 
 export default function Table<T extends Record<string, any>>({
@@ -20,51 +29,37 @@ export default function Table<T extends Record<string, any>>({
   isLoading = false,
   emptyMessage = 'No data available',
 }: TableProps<T>) {
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-      </div>
-    );
-  }
-
-  if (data.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-gray-500">{emptyMessage}</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="overflow-x-auto">
-      <table className="table">
-        <thead>
-          <tr>
-            {columns.map((column) => (
-              <th
-                key={column.key}
-                style={{ width: column.width }}
-              >
-                {column.header}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((row, index) => (
-            <tr key={row.id || index}>
-              {columns.map((column) => (
-                <td key={column.key}>
-                  {column.render
-                    ? column.render(row[column.key], row)
-                    : row[column.key]}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <HeroTable
+      aria-label="Data table"
+      isStriped
+      classNames={{
+        wrapper: 'min-h-[222px]',
+      }}
+    >
+      <TableHeader>
+        {columns.map((column) => (
+          <TableColumn key={column.key} style={{ width: column.width }}>
+            {column.header}
+          </TableColumn>
+        ))}
+      </TableHeader>
+      <TableBody
+        isLoading={isLoading}
+        loadingContent={<Spinner label="Loading..." />}
+        emptyContent={emptyMessage}
+        items={data}
+      >
+        {(item) => (
+          <TableRow key={item.id || data.indexOf(item)}>
+            {(columnKey) => {
+              const column = columns.find((col) => col.key === columnKey);
+              const value = item[columnKey as string];
+              return <TableCell>{column?.render ? column.render(value, item) : value}</TableCell>;
+            }}
+          </TableRow>
+        )}
+      </TableBody>
+    </HeroTable>
   );
 }

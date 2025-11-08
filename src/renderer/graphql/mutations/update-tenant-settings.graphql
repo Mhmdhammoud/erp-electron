@@ -1,23 +1,19 @@
-mutation UpdateTenantSettings($input: UpdateTenantInput!) {
-  updateTenantSettings(input: $input) {
-    data {
+mutation UpdateTenantSettings($id: ID!, $input: UpdateTenantInput!) {
+  updateTenant(id: $id, input: $input) {
+    tenant {
       id
       name
       branding {
-        logoUrl
-        primaryColor
-        invoiceFooter
+        logo_url
+        primary_color
+        invoice_footer
+        company_address
       }
-      currencyConfig {
-        exchangeRate
+      currency_config {
+        base_currency
+        secondary_currency
+        exchange_rate
       }
-      businessInfo {
-        address
-        phone
-        email
-        taxId
-      }
-      updated_at
     }
     error {
       field

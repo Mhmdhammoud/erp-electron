@@ -1,13 +1,20 @@
 mutation CreateCustomer($input: CreateCustomerInput!) {
   createCustomer(input: $input) {
-    data {
-      id
+    customer {
+      _id
       name
       email
       phone
-      address
-      status
-      created_at
+      addresses {
+        type
+        street
+        city
+        state
+        postal_code
+        country
+        is_default
+      }
+      notes
     }
     error {
       field

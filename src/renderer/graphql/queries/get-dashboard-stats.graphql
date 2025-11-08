@@ -1,15 +1,36 @@
 query GetDashboardStats {
-  dashboardStats {
-    data {
-      total_revenue_usd
-      total_orders
-      total_customers
-      pending_orders
-      low_stock_count
+  dashboardMetrics {
+    revenue {
+      today
+      this_week
+      this_month
+      last_month
     }
-    error {
-      field
-      message
+    order_status_counts {
+      status
+      count
+    }
+    invoice_status_counts {
+      status
+      count
+    }
+    low_inventory_products {
+      product_id
+      product_name
+      product_sku
+      current_stock
+      low_stock_threshold
+    }
+    overdue_invoices {
+      count
+      total_amount_usd
+    }
+    top_products {
+      product_id
+      product_name
+      product_sku
+      total_quantity_sold
+      total_revenue_usd
     }
   }
 }

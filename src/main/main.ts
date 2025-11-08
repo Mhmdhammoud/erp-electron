@@ -2,8 +2,13 @@ import { app, BrowserWindow } from 'electron';
 import path from 'path';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
-if (require('electron-squirrel-startup')) {
-  app.quit();
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  if (require('electron-squirrel-startup')) {
+    app.quit();
+  }
+} catch {
+  // electron-squirrel-startup is optional and only needed on Windows
 }
 
 let mainWindow: BrowserWindow | null = null;

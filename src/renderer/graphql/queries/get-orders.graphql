@@ -1,33 +1,26 @@
 query GetOrders($filter: OrderFilterInput) {
   orders(filter: $filter) {
-    data {
+    orders {
       id
       customer_id
-      customer {
-        id
-        name
-        email
-      }
       items {
         product_id
-        product {
-          id
-          name
-          sku
-        }
+        product_sku
+        product_name
         quantity
         unit_price_usd
         subtotal_usd
       }
       total_usd
       status
-      currency
-      created_at
-      updated_at
+      currency_used
     }
     error {
       field
       message
     }
+    length
+    page
+    limit
   }
 }

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, gql } from '@apollo/client';
+import { Select, SelectItem } from '@heroui/react';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Table from '../components/common/Table';
@@ -10,21 +11,23 @@ import { STATUS_COLORS, OrderStatus } from '../utils/constants';
 import { formatDate } from '../utils/formatters';
 
 const GET_ORDERS_QUERY = gql`
-  query GetOrders($status: OrderStatus) {
-    orders(status: $status) {
-      data {
+  query GetOrders($filter: OrderFilterInput) {
+    orders(filter: $filter) {
+      orders {
         id
         order_number
         customer_id
         status
         total_usd
         total_lbp
-        createdAt
       }
       error {
         field
         message
       }
+      length
+      page
+      limit
     }
   }
 `;
@@ -32,11 +35,11 @@ const GET_ORDERS_QUERY = gql`
 export default function Orders() {
   const [statusFilter, setStatusFilter] = useState<OrderStatus | null>(null);
   const { data, loading } = useQuery(GET_ORDERS_QUERY, {
-    variables: { status: statusFilter },
+    variables: { filter: statusFilter ? { status: statusFilter } : undefined },
   });
 
   const { formatDual } = useCurrency();
-  const orders = data?.orders?.data || [];
+  const orders = data?.orders?.orders || [];
 
   const columns = [
     { key: 'order_number', header: 'Order #' },
@@ -84,19 +87,34 @@ export default function Orders() {
       <Card>
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-4">
-            <Filter className="w-5 h-5 text-gray-400" />
-            <select
-              className="input w-48"
-              value={statusFilter || ''}
-              onChange={(e) => setStatusFilter((e.target.value as OrderStatus) || null)}
+            <Filter className="w-5 h-5 text-default-400" />
+            <Select
+              label="Filter by Status"
+              placeholder="All Statuses"
+              selectedKeys={statusFilter ? [statusFilter] : []}
+              onSelectionChange={(keys) => {
+                const selected = Array.from(keys)[0] as OrderStatus | null;
+                setStatusFilter(selected || null);
+              }}
+              className="w-48"
+              size="sm"
             >
-              <option value="">All Statuses</option>
-              <option value={OrderStatus.DRAFT}>Draft</option>
-              <option value={OrderStatus.CONFIRMED}>Confirmed</option>
-              <option value={OrderStatus.SHIPPED}>Shipped</option>
-              <option value={OrderStatus.INVOICED}>Invoiced</option>
-              <option value={OrderStatus.CANCELLED}>Cancelled</option>
-            </select>
+              <SelectItem key={OrderStatus.DRAFT} value={OrderStatus.DRAFT}>
+                Draft
+              </SelectItem>
+              <SelectItem key={OrderStatus.CONFIRMED} value={OrderStatus.CONFIRMED}>
+                Confirmed
+              </SelectItem>
+              <SelectItem key={OrderStatus.SHIPPED} value={OrderStatus.SHIPPED}>
+                Shipped
+              </SelectItem>
+              <SelectItem key={OrderStatus.INVOICED} value={OrderStatus.INVOICED}>
+                Invoiced
+              </SelectItem>
+              <SelectItem key={OrderStatus.CANCELLED} value={OrderStatus.CANCELLED}>
+                Cancelled
+              </SelectItem>
+            </Select>
           </div>
           <Button>
             <Plus className="w-4 h-4 mr-2" />

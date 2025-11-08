@@ -1,6 +1,6 @@
 mutation CreateOrder($input: CreateOrderInput!) {
   createOrder(input: $input) {
-    data {
+    order {
       id
       customer_id
       items {
@@ -11,8 +11,7 @@ mutation CreateOrder($input: CreateOrderInput!) {
       }
       total_usd
       status
-      currency
-      created_at
+      currency_used
     }
     error {
       field

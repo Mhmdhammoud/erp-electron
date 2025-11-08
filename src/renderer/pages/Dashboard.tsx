@@ -1,86 +1,46 @@
-import { useQuery, gql } from '@apollo/client';
+import { Spinner } from '@heroui/react';
 import Card from '../components/common/Card';
 import { useCurrency } from '../hooks/useCurrency';
-import { DollarSign, ShoppingCart, Users, FileText, TrendingUp, Package } from 'lucide-react';
-
-const DASHBOARD_METRICS_QUERY = gql`
-  query GetDashboardMetrics {
-    dashboardMetrics {
-      data {
-        revenue {
-          today
-          thisWeek
-          thisMonth
-          lastMonth
-        }
-        topProducts {
-          product_id
-          product_name
-          total_quantity_sold
-          total_revenue_usd
-        }
-        lowInventory {
-          product_id
-          product_name
-          sku
-          quantity_in_stock
-          reorder_level
-        }
-        ordersByStatus {
-          status
-          count
-        }
-        invoicesByStatus {
-          status
-          count
-        }
-        overdueInvoices {
-          count
-          total_amount_usd
-        }
-      }
-      error {
-        field
-        message
-      }
-    }
-  }
-`;
+import { DollarSign, ShoppingCart, FileText, Package } from 'lucide-react';
+import { useGetDashboardStatsQuery } from '../types/generated';
 
 export default function Dashboard() {
-  const { data, loading } = useQuery(DASHBOARD_METRICS_QUERY);
+  const { data, loading } = useGetDashboardStatsQuery();
   const { formatUSD } = useCurrency();
 
-  const metrics = data?.dashboardMetrics?.data;
+  const metrics = data?.dashboardMetrics;
 
   const stats = [
     {
       name: 'Total Revenue (Month)',
-      value: formatUSD(metrics?.revenue?.thisMonth || 0),
+      value: formatUSD(metrics?.revenue?.this_month || 0),
       icon: DollarSign,
       change: '+12.5%',
       changeType: 'increase',
     },
     {
       name: 'Orders',
-      value: metrics?.ordersByStatus?.reduce((sum: number, item: any) => sum + item.count, 0) || 0,
+      value:
+        metrics?.order_status_counts?.reduce((sum: number, item: any) => sum + item.count, 0) || 0,
       icon: ShoppingCart,
       change: '+4.75%',
       changeType: 'increase',
     },
     {
       name: 'Invoices',
-      value: metrics?.invoicesByStatus?.reduce((sum: number, item: any) => sum + item.count, 0) || 0,
+      value:
+        metrics?.invoice_status_counts?.reduce((sum: number, item: any) => sum + item.count, 0) ||
+        0,
       icon: FileText,
       change: '-1.39%',
       changeType: 'decrease',
     },
     {
       name: 'Low Inventory',
-      value: metrics?.lowInventory?.length || 0,
+      value: metrics?.low_inventory_products?.length || 0,
       icon: Package,
-      change: metrics?.lowInventory?.length > 0 ? 'Attention needed' : 'All good',
-      changeType: metrics?.lowInventory?.length > 0 ? 'decrease' : 'increase',
+      change: metrics?.low_inventory_products?.length > 0 ? 'Attention needed' : 'All good',
+      changeType: metrics?.low_inventory_products?.length > 0 ? 'decrease' : 'increase',
     },
   ];
 
@@ -99,9 +59,11 @@ export default function Dashboard() {
               <div>
                 <p className="text-sm font-medium text-gray-600">{stat.name}</p>
                 <p className="text-2xl font-bold text-gray-900 mt-2">{stat.value}</p>
-                <p className={`text-sm mt-2 ${
-                  stat.changeType === 'increase' ? 'text-green-600' : 'text-red-600'
-                }`}>
+                <p
+                  className={`text-sm mt-2 ${
+                    stat.changeType === 'increase' ? 'text-green-600' : 'text-red-600'
+                  }`}
+                >
                   {stat.change}
                 </p>
               </div>
@@ -119,11 +81,11 @@ export default function Dashboard() {
         <Card title="Top Products">
           {loading ? (
             <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+              <Spinner size="lg" color="primary" />
             </div>
           ) : (
             <div className="space-y-4">
-              {metrics?.topProducts?.slice(0, 5).map((product: any) => (
+              {metrics?.top_products?.slice(0, 5).map((product: any) => (
                 <div key={product.product_id} className="flex items-center justify-between">
                   <div>
                     <p className="font-medium text-gray-900">{product.product_name}</p>
@@ -142,11 +104,11 @@ export default function Dashboard() {
         <Card title="Low Inventory Alerts">
           {loading ? (
             <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+              <Spinner size="lg" color="primary" />
             </div>
           ) : (
             <div className="space-y-4">
-              {metrics?.lowInventory?.slice(0, 5).map((product: any) => (
+              {metrics?.low_inventory_products?.slice(0, 5).map((product: any) => (
                 <div key={product.product_id} className="flex items-center justify-between">
                   <div>
                     <p className="font-medium text-gray-900">{product.product_name}</p>

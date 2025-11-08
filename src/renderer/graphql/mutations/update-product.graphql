@@ -1,6 +1,6 @@
-mutation UpdateProduct($id: String!, $input: UpdateProductInput!) {
+mutation UpdateProduct($id: ID!, $input: UpdateProductInput!) {
   updateProduct(id: $id, input: $input) {
-    data {
+    product {
       id
       sku
       name
@@ -11,7 +11,6 @@ mutation UpdateProduct($id: String!, $input: UpdateProductInput!) {
       status
       barcode
       description
-      updated_at
     }
     error {
       field

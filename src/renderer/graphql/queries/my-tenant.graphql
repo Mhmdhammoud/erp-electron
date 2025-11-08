@@ -1,27 +1,24 @@
 query MyTenant {
   myTenant {
-    data {
+    tenant {
       id
       name
       email
       phone
       website
       branding {
-        logoUrl
-        primaryColor
-        invoiceFooter
-        companyAddress
+        logo_url
+        primary_color
+        invoice_footer
+        company_address
       }
-      currencyConfig {
-        baseCurrency
-        secondaryCurrency
-        exchangeRate
-        updatedAt
+      currency_config {
+        base_currency
+        secondary_currency
+        exchange_rate
       }
       language
       status
-      createdAt
-      updatedAt
     }
     error {
       field

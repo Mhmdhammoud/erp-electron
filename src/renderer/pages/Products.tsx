@@ -3,6 +3,7 @@ import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Table from '../components/common/Table';
 import Badge from '../components/common/Badge';
+import Input from '../components/common/Input';
 import { Plus, Search, Edit, Trash } from 'lucide-react';
 import { useCurrency } from '../hooks/useCurrency';
 import { STATUS_COLORS } from '../utils/constants';
@@ -14,8 +15,8 @@ export default function Products() {
     variables: { filter: { search: searchTerm } },
   });
 
-  const { formatUSD, formatDual } = useCurrency();
-  const products = data?.products?.data || [];
+  const { formatDual } = useCurrency();
+  const products = data?.products?.products || [];
 
   const columns = [
     { key: 'sku', header: 'SKU' },
@@ -74,14 +75,13 @@ export default function Products() {
       <Card>
         {/* Header with Search and Add Button */}
         <div className="flex items-center justify-between mb-6">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
+          <div className="flex-1 max-w-md">
+            <Input
               type="text"
               placeholder="Search products by name, SKU, or barcode..."
-              className="input pl-10"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              startContent={<Search className="w-5 h-5 text-default-400" />}
             />
           </div>
           <Button>

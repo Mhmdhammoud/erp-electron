@@ -4,24 +4,36 @@ import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Table from '../components/common/Table';
 import Badge from '../components/common/Badge';
+import Input from '../components/common/Input';
 import { Plus, Search, Edit, Trash } from 'lucide-react';
 import { STATUS_COLORS } from '../utils/constants';
 
 const GET_CUSTOMERS_QUERY = gql`
-  query GetCustomers {
-    customers {
-      data {
-        id
+  query GetCustomers($filter: CustomerFilterInput) {
+    customers(filter: $filter) {
+      customers {
+        _id
         name
         email
         phone
-        company_name
-        status
+        addresses {
+          type
+          street
+          city
+          state
+          postal_code
+          country
+          is_default
+        }
+        notes
       }
       error {
         field
         message
       }
+      length
+      page
+      limit
     }
   }
 `;
@@ -30,7 +42,7 @@ export default function Customers() {
   const [searchTerm, setSearchTerm] = useState('');
   const { data, loading } = useQuery(GET_CUSTOMERS_QUERY);
 
-  const customers = data?.customers?.data || [];
+  const customers = data?.customers?.customers || [];
   const filteredCustomers = customers.filter((customer: any) =>
     customer.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -70,14 +82,13 @@ export default function Customers() {
 
       <Card>
         <div className="flex items-center justify-between mb-6">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
+          <div className="flex-1 max-w-md">
+            <Input
               type="text"
               placeholder="Search customers..."
-              className="input pl-10"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              startContent={<Search className="w-5 h-5 text-default-400" />}
             />
           </div>
           <Button>

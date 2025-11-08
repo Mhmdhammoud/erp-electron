@@ -1,7 +1,7 @@
-mutation DeleteProduct($id: String!) {
+mutation DeleteProduct($id: ID!) {
   deleteProduct(id: $id) {
-    data {
-      success
+    product {
+      id
     }
     error {
       field

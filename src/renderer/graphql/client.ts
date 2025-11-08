@@ -3,7 +3,7 @@ import { setContext } from '@apollo/client/link/context';
 import { onError } from '@apollo/client/link/error';
 import { CachePersistor } from 'apollo3-cache-persist';
 
-const GRAPHQL_ENDPOINT = import.meta.env.VITE_GRAPHQL_ENDPOINT || 'http://localhost:3000/graphql';
+const GRAPHQL_ENDPOINT = import.meta.env.VITE_GRAPHQL_ENDPOINT || 'http://localhost:5050/graphql';
 
 // Create HTTP link
 const httpLink = new HttpLink({
@@ -31,13 +31,21 @@ export const setAuthTokenGetter = (tokenGetter: () => Promise<string | null>) =>
 };
 
 const authLink = setContext(async (_, { headers }) => {
-  const token = getAuthToken ? await getAuthToken() : null;
-  return {
-    headers: {
-      ...headers,
-      authorization: token ? `Bearer ${token}` : '',
-    },
-  };
+  try {
+    const token = getAuthToken ? await getAuthToken() : null;
+    if (!token) {
+      console.warn('[Apollo Client] No auth token available');
+    }
+    return {
+      headers: {
+        ...headers,
+        ...(token ? { authorization: `Bearer ${token}` } : {}),
+      },
+    };
+  } catch (error) {
+    console.error('[Apollo Client] Error getting auth token:', error);
+    return { headers };
+  }
 });
 
 // Create cache

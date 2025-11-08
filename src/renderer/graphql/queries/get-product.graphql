@@ -1,6 +1,6 @@
-query GetProduct($id: String!) {
+query GetProduct($id: ID!) {
   product(id: $id) {
-    data {
+    product {
       id
       sku
       name
@@ -11,9 +11,6 @@ query GetProduct($id: String!) {
       status
       barcode
       description
-      supplier_info
-      created_at
-      updated_at
     }
     error {
       field

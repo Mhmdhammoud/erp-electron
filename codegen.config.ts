@@ -2,14 +2,10 @@ import type { CodegenConfig } from '@graphql-codegen/cli';
 
 const config: CodegenConfig = {
   schema: [
-    {
-      [process.env.VITE_GRAPHQL_ENDPOINT || 'http://localhost:3000/graphql']: {
-        headers: {
-          // Add any required headers here
-          // For example, if your GraphQL endpoint requires API keys
-        },
-      },
-    },
+    // Use endpoint first, fallback to local schema file
+    process.env.VITE_GRAPHQL_ENDPOINT || 'http://localhost:5050/graphql',
+    // Fallback to local schema file if endpoint fails
+    '../erp-backend/src/graphql/schema.gql',
   ],
   documents: 'src/renderer/graphql/**/*.graphql',
   generates: {
@@ -23,11 +19,7 @@ const config: CodegenConfig = {
         enumsAsTypes: false,
         avoidOptionals: false,
       },
-      plugins: [
-        'typescript',
-        'typescript-operations',
-        'typescript-react-apollo',
-      ],
+      plugins: ['typescript', 'typescript-operations', 'typescript-react-apollo'],
     },
   },
 };

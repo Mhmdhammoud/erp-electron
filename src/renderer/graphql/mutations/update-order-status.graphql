@@ -1,9 +1,8 @@
-mutation UpdateOrderStatus($id: String!, $status: OrderStatus!) {
-  updateOrderStatus(id: $id, status: $status) {
-    data {
+mutation UpdateOrderStatus($id: ID!, $input: UpdateOrderStatusInput!) {
+  updateOrderStatus(id: $id, input: $input) {
+    order {
       id
       status
-      updated_at
     }
     error {
       field

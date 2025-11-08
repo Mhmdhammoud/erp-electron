@@ -10,23 +10,24 @@ import { STATUS_COLORS, PaymentStatus } from '../utils/constants';
 import { formatDate } from '../utils/formatters';
 
 const GET_INVOICES_QUERY = gql`
-  query GetInvoices($status: PaymentStatus) {
-    invoices(status: $status) {
-      data {
+  query GetInvoices($filter: InvoiceFilterInput) {
+    invoices(filter: $filter) {
+      invoices {
         id
         invoice_number
         customer_id
         total_usd
         paid_amount_usd
-        remaining_amount_usd
         payment_status
         due_date
-        createdAt
       }
       error {
         field
         message
       }
+      length
+      page
+      limit
     }
   }
 `;
@@ -34,11 +35,11 @@ const GET_INVOICES_QUERY = gql`
 export default function Invoices() {
   const [statusFilter, setStatusFilter] = useState<PaymentStatus | null>(null);
   const { data, loading } = useQuery(GET_INVOICES_QUERY, {
-    variables: { status: statusFilter },
+    variables: { filter: statusFilter ? { status: statusFilter } : undefined },
   });
 
   const { formatUSD } = useCurrency();
-  const invoices = data?.invoices?.data || [];
+  const invoices = data?.invoices?.invoices || [];
 
   const columns = [
     { key: 'invoice_number', header: 'Invoice #' },

@@ -1,22 +1,23 @@
+import { Card as HeroCard, CardHeader, CardBody } from '@heroui/react';
 import { ReactNode } from 'react';
 
 interface CardProps {
-  title?: string;
-  children: ReactNode;
-  className?: string;
-  actions?: ReactNode;
+  readonly title?: string;
+  readonly children: ReactNode;
+  readonly className?: string;
+  readonly actions?: ReactNode;
 }
 
 export default function Card({ title, children, className = '', actions }: CardProps) {
   return (
-    <div className={`card ${className}`}>
+    <HeroCard className={className}>
       {(title || actions) && (
-        <div className="flex items-center justify-between mb-4">
-          {title && <h3 className="text-lg font-semibold text-gray-900">{title}</h3>}
+        <CardHeader className="flex items-center justify-between">
+          {title && <h3 className="text-lg font-semibold">{title}</h3>}
           {actions && <div>{actions}</div>}
-        </div>
+        </CardHeader>
       )}
-      {children}
-    </div>
+      <CardBody>{children}</CardBody>
+    </HeroCard>
   );
 }

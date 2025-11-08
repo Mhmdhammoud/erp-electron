@@ -1,6 +1,6 @@
 mutation CreateProduct($input: CreateProductInput!) {
   createProduct(input: $input) {
-    data {
+    product {
       id
       sku
       name
@@ -11,7 +11,6 @@ mutation CreateProduct($input: CreateProductInput!) {
       status
       barcode
       description
-      created_at
     }
     error {
       field

@@ -16,11 +16,12 @@ export default defineConfig({
         vite: {
           build: {
             outDir: 'dist-electron',
+            format: 'cjs',
             rollupOptions: {
-              external: ['electron']
-            }
-          }
-        }
+              external: ['electron'],
+            },
+          },
+        },
       },
       {
         entry: 'src/preload/preload.ts',
@@ -29,12 +30,13 @@ export default defineConfig({
         },
         vite: {
           build: {
-            outDir: 'dist-electron'
-          }
-        }
-      }
+            outDir: 'dist-electron',
+            format: 'cjs',
+          },
+        },
+      },
     ]),
-    renderer()
+    renderer(),
   ],
   resolve: {
     alias: {
@@ -45,10 +47,10 @@ export default defineConfig({
       '@/store': path.resolve(__dirname, './src/renderer/store'),
       '@/graphql': path.resolve(__dirname, './src/renderer/graphql'),
       '@/utils': path.resolve(__dirname, './src/renderer/utils'),
-      '@/types': path.resolve(__dirname, './src/renderer/types')
-    }
+      '@/types': path.resolve(__dirname, './src/renderer/types'),
+    },
   },
   server: {
-    port: 5173
-  }
+    port: 5173,
+  },
 });

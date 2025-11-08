@@ -1,9 +1,21 @@
-export default function Loading() {
+import { Spinner } from '@heroui/react';
+
+interface LoadingProps {
+  readonly label?: string;
+  readonly size?: 'sm' | 'md' | 'lg';
+  readonly className?: string;
+}
+
+export default function Loading({
+  label = 'Loading...',
+  size = 'lg',
+  className = '',
+}: LoadingProps) {
   return (
-    <div className="flex items-center justify-center min-h-screen">
+    <div className={`flex items-center justify-center min-h-screen ${className}`}>
       <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-        <p className="mt-4 text-gray-600">Loading...</p>
+        <Spinner size={size} color="primary" />
+        {label && <p className="mt-4 text-default-600">{label}</p>}
       </div>
     </div>
   );
