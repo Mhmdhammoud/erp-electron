@@ -1,0 +1,24 @@
+mutation UpdateCustomer($id: ID!, $input: UpdateCustomerInput!) {
+  updateCustomer(id: $id, input: $input) {
+    customer {
+      _id
+      name
+      email
+      phone
+      addresses {
+        type
+        street
+        city
+        state
+        postal_code
+        country
+        is_default
+      }
+      notes
+    }
+    error {
+      field
+      message
+    }
+  }
+}
