@@ -8,6 +8,7 @@ import {
 } from '@clerk/clerk-react';
 import { ApolloProvider } from '@apollo/client';
 import { Toaster } from './components/ui/toaster';
+import { ThemeProvider } from './components/theme-provider';
 import { apolloClient, setAuthTokenGetter } from './graphql/client';
 import Layout from './components/layout/Layout';
 import { Component, ErrorInfo, ReactNode, useEffect } from 'react';
@@ -122,53 +123,55 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <ClerkProvider
-        publishableKey={CLERK_PUBLISHABLE_KEY}
-        routerPush={(to) => window.history.pushState(null, '', to)}
-        routerReplace={(to) => window.history.replaceState(null, '', to)}
-      >
-        <AuthTokenSetter />
-        <ApolloProvider client={apolloClient}>
-          <Router>
-            <SignedIn>
-              <Layout>
-                <Routes>
-                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/products" element={<Products />} />
-                  <Route path="/customers" element={<Customers />} />
-                  <Route path="/orders" element={<Orders />} />
-                  <Route path="/invoices" element={<Invoices />} />
-                  <Route path="/settings" element={<Settings />} />
-                </Routes>
-              </Layout>
-            </SignedIn>
-            <SignedOut>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  height: '100vh',
-                  width: '100vw',
-                  backgroundColor: '#f9fafb',
-                }}
-              >
+      <ThemeProvider defaultTheme="light" storageKey="erp-ui-theme">
+        <ClerkProvider
+          publishableKey={CLERK_PUBLISHABLE_KEY}
+          routerPush={(to) => window.history.pushState(null, '', to)}
+          routerReplace={(to) => window.history.replaceState(null, '', to)}
+        >
+          <AuthTokenSetter />
+          <ApolloProvider client={apolloClient}>
+            <Router>
+              <SignedIn>
+                <Layout>
+                  <Routes>
+                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/products" element={<Products />} />
+                    <Route path="/customers" element={<Customers />} />
+                    <Route path="/orders" element={<Orders />} />
+                    <Route path="/invoices" element={<Invoices />} />
+                    <Route path="/settings" element={<Settings />} />
+                  </Routes>
+                </Layout>
+              </SignedIn>
+              <SignedOut>
                 <div
                   style={{
-                    width: '100%',
-                    maxWidth: '400px',
-                    padding: '2rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: '100vh',
+                    width: '100vw',
+                    backgroundColor: '#f9fafb',
                   }}
                 >
-                  <SignIn routing="hash" signUpUrl="/sign-up" />
+                  <div
+                    style={{
+                      width: '100%',
+                      maxWidth: '400px',
+                      padding: '2rem',
+                    }}
+                  >
+                    <SignIn routing="hash" signUpUrl="/sign-up" />
+                  </div>
                 </div>
-              </div>
-            </SignedOut>
-          </Router>
-          <Toaster />
-        </ApolloProvider>
-      </ClerkProvider>
+              </SignedOut>
+            </Router>
+            <Toaster />
+          </ApolloProvider>
+        </ClerkProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 }
