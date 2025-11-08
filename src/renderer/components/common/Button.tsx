@@ -1,11 +1,12 @@
-import { Button as HeroButton, ButtonProps as HeroButtonProps } from '@heroui/react';
+import { Button as ShadcnButton, ButtonProps } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 import { ReactNode } from 'react';
 
-interface ButtonProps extends Omit<HeroButtonProps, 'color' | 'variant'> {
-  variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
-  size?: 'sm' | 'md' | 'lg';
-  isLoading?: boolean;
-  children: ReactNode;
+interface CustomButtonProps extends Omit<ButtonProps, 'variant' | 'size'> {
+  readonly variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
+  readonly size?: 'sm' | 'md' | 'lg';
+  readonly isLoading?: boolean;
+  readonly children: ReactNode;
 }
 
 export default function Button({
@@ -13,31 +14,31 @@ export default function Button({
   size = 'md',
   isLoading = false,
   children,
+  disabled,
   ...props
-}: ButtonProps) {
-  const colorMap = {
-    primary: 'primary' as const,
-    secondary: 'default' as const,
-    danger: 'danger' as const,
-    ghost: 'default' as const,
+}: CustomButtonProps) {
+  const variantMap: Record<string, ButtonProps['variant']> = {
+    primary: 'default',
+    secondary: 'secondary',
+    danger: 'destructive',
+    ghost: 'ghost',
   };
 
-  const variantMap = {
-    primary: 'solid' as const,
-    secondary: 'bordered' as const,
-    danger: 'solid' as const,
-    ghost: 'light' as const,
+  const sizeMap: Record<string, ButtonProps['size']> = {
+    sm: 'sm',
+    md: 'default',
+    lg: 'lg',
   };
 
   return (
-    <HeroButton
-      color={colorMap[variant]}
+    <ShadcnButton
       variant={variantMap[variant]}
-      size={size}
-      isLoading={isLoading}
+      size={sizeMap[size]}
+      disabled={disabled || isLoading}
       {...props}
     >
+      {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
       {children}
-    </HeroButton>
+    </ShadcnButton>
   );
 }

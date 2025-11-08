@@ -1,4 +1,5 @@
-import { Spinner } from '@heroui/react';
+import { Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface LoadingProps {
   readonly label?: string;
@@ -11,11 +12,17 @@ export default function Loading({
   size = 'lg',
   className = '',
 }: LoadingProps) {
+  const sizeClasses = {
+    sm: 'h-4 w-4',
+    md: 'h-6 w-6',
+    lg: 'h-8 w-8',
+  };
+
   return (
-    <div className={`flex items-center justify-center min-h-screen ${className}`}>
+    <div className={cn('flex items-center justify-center min-h-screen', className)}>
       <div className="text-center">
-        <Spinner size={size} color="primary" />
-        {label && <p className="mt-4 text-default-600">{label}</p>}
+        <Loader2 className={cn('animate-spin text-primary mx-auto', sizeClasses[size])} />
+        {label && <p className="mt-4 text-muted-foreground">{label}</p>}
       </div>
     </div>
   );

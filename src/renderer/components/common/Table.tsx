@@ -1,19 +1,19 @@
 import {
-  Table as HeroTable,
-  TableHeader,
-  TableColumn,
+  Table as ShadcnTable,
   TableBody,
-  TableRow,
   TableCell,
-  Spinner,
-} from '@heroui/react';
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Skeleton } from '@/components/ui/skeleton';
 import { ReactNode } from 'react';
 
 interface Column<T> {
-  key: string;
-  header: string;
-  render?: (value: any, row: T) => ReactNode;
-  width?: string;
+  readonly key: string;
+  readonly header: string;
+  readonly render?: (value: any, row: T) => ReactNode;
+  readonly width?: string;
 }
 
 interface TableProps<T> {
@@ -29,37 +29,72 @@ export default function Table<T extends Record<string, any>>({
   isLoading = false,
   emptyMessage = 'No data available',
 }: TableProps<T>) {
+  if (isLoading) {
+    return (
+      <div className="rounded-md border">
+        <ShadcnTable>
+          <TableHeader>
+            <TableRow>
+              {columns.map((column) => (
+                <TableHead key={column.key} style={{ width: column.width }}>
+                  <Skeleton className="h-4 w-20" />
+                </TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {[1, 2, 3].map((i) => (
+              <TableRow key={i}>
+                {columns.map((column) => (
+                  <TableCell key={column.key}>
+                    <Skeleton className="h-4 w-full" />
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </ShadcnTable>
+      </div>
+    );
+  }
+
+  if (data.length === 0) {
+    return (
+      <div className="rounded-md border">
+        <div className="flex items-center justify-center py-12">
+          <p className="text-sm text-muted-foreground">{emptyMessage}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <HeroTable
-      aria-label="Data table"
-      isStriped
-      classNames={{
-        wrapper: 'min-h-[222px]',
-      }}
-    >
-      <TableHeader>
-        {columns.map((column) => (
-          <TableColumn key={column.key} style={{ width: column.width }}>
-            {column.header}
-          </TableColumn>
-        ))}
-      </TableHeader>
-      <TableBody
-        isLoading={isLoading}
-        loadingContent={<Spinner label="Loading..." />}
-        emptyContent={emptyMessage}
-        items={data}
-      >
-        {(item) => (
-          <TableRow key={item.id || data.indexOf(item)}>
-            {(columnKey) => {
-              const column = columns.find((col) => col.key === columnKey);
-              const value = item[columnKey as string];
-              return <TableCell>{column?.render ? column.render(value, item) : value}</TableCell>;
-            }}
+    <div className="rounded-md border">
+      <ShadcnTable>
+        <TableHeader>
+          <TableRow>
+            {columns.map((column) => (
+              <TableHead key={column.key} style={{ width: column.width }}>
+                {column.header}
+              </TableHead>
+            ))}
           </TableRow>
-        )}
-      </TableBody>
-    </HeroTable>
+        </TableHeader>
+        <TableBody>
+          {data.map((row, index) => (
+            <TableRow key={row.id || index}>
+              {columns.map((column) => {
+                const value = row[column.key];
+                return (
+                  <TableCell key={column.key}>
+                    {column.render ? column.render(value, row) : value}
+                  </TableCell>
+                );
+              })}
+            </TableRow>
+          ))}
+        </TableBody>
+      </ShadcnTable>
+    </div>
   );
 }

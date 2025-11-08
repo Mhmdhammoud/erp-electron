@@ -1,7 +1,6 @@
-import { Spinner } from '@heroui/react';
+import { Loader2, DollarSign, ShoppingCart, FileText, Package } from 'lucide-react';
 import Card from '../components/common/Card';
 import { useCurrency } from '../hooks/useCurrency';
-import { DollarSign, ShoppingCart, FileText, Package } from 'lucide-react';
 import { useGetDashboardStatsQuery } from '../types/generated';
 
 export default function Dashboard() {
@@ -81,7 +80,7 @@ export default function Dashboard() {
         <Card title="Top Products">
           {loading ? (
             <div className="text-center py-8">
-              <Spinner size="lg" color="primary" />
+              <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
             </div>
           ) : (
             <div className="space-y-4">
@@ -104,7 +103,7 @@ export default function Dashboard() {
         <Card title="Low Inventory Alerts">
           {loading ? (
             <div className="text-center py-8">
-              <Spinner size="lg" color="primary" />
+              <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
             </div>
           ) : (
             <div className="space-y-4">

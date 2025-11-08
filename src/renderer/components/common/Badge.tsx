@@ -1,4 +1,4 @@
-import { Chip, ChipProps } from '@heroui/react';
+import { Badge as ShadcnBadge } from '@/components/ui/badge';
 import { ReactNode } from 'react';
 
 interface BadgeProps {
@@ -8,17 +8,20 @@ interface BadgeProps {
 }
 
 export default function Badge({ children, variant = 'gray', className = '' }: BadgeProps) {
-  const colorMap: Record<string, ChipProps['color']> = {
+  const variantMap: Record<
+    string,
+    'default' | 'secondary' | 'destructive' | 'success' | 'warning' | 'outline'
+  > = {
     success: 'success',
     warning: 'warning',
-    danger: 'danger',
-    info: 'primary',
-    gray: 'default',
+    danger: 'destructive',
+    info: 'default',
+    gray: 'secondary',
   };
 
   return (
-    <Chip color={colorMap[variant]} variant="flat" size="sm" className={className}>
+    <ShadcnBadge variant={variantMap[variant]} className={className}>
       {children}
-    </Chip>
+    </ShadcnBadge>
   );
 }

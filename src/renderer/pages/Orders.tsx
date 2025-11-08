@@ -1,6 +1,12 @@
 import { useState } from 'react';
 import { useQuery, gql } from '@apollo/client';
-import { Select, SelectItem } from '@heroui/react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Table from '../components/common/Table';
@@ -87,33 +93,22 @@ export default function Orders() {
       <Card>
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-4">
-            <Filter className="w-5 h-5 text-default-400" />
+            <Filter className="w-5 h-5 text-muted-foreground" />
             <Select
-              label="Filter by Status"
-              placeholder="All Statuses"
-              selectedKeys={statusFilter ? [statusFilter] : []}
-              onSelectionChange={(keys) => {
-                const selected = Array.from(keys)[0] as OrderStatus | null;
-                setStatusFilter(selected || null);
-              }}
-              className="w-48"
-              size="sm"
+              value={statusFilter || ''}
+              onValueChange={(value) => setStatusFilter((value as OrderStatus) || null)}
             >
-              <SelectItem key={OrderStatus.DRAFT} value={OrderStatus.DRAFT}>
-                Draft
-              </SelectItem>
-              <SelectItem key={OrderStatus.CONFIRMED} value={OrderStatus.CONFIRMED}>
-                Confirmed
-              </SelectItem>
-              <SelectItem key={OrderStatus.SHIPPED} value={OrderStatus.SHIPPED}>
-                Shipped
-              </SelectItem>
-              <SelectItem key={OrderStatus.INVOICED} value={OrderStatus.INVOICED}>
-                Invoiced
-              </SelectItem>
-              <SelectItem key={OrderStatus.CANCELLED} value={OrderStatus.CANCELLED}>
-                Cancelled
-              </SelectItem>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="All Statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All Statuses</SelectItem>
+                <SelectItem value={OrderStatus.DRAFT}>Draft</SelectItem>
+                <SelectItem value={OrderStatus.CONFIRMED}>Confirmed</SelectItem>
+                <SelectItem value={OrderStatus.SHIPPED}>Shipped</SelectItem>
+                <SelectItem value={OrderStatus.INVOICED}>Invoiced</SelectItem>
+                <SelectItem value={OrderStatus.CANCELLED}>Cancelled</SelectItem>
+              </SelectContent>
             </Select>
           </div>
           <Button>

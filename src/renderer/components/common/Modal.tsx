@@ -1,49 +1,49 @@
 import {
-  Modal as HeroModal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-} from '@heroui/react';
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { ReactNode } from 'react';
+import { cn } from '@/lib/utils';
 
 interface ModalProps {
-  readonly isOpen: boolean;
-  readonly onClose: () => void;
+  readonly open: boolean;
+  readonly onOpenChange: (open: boolean) => void;
   readonly title: string;
   readonly children: ReactNode;
   readonly footer?: ReactNode;
-  readonly size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | 'full';
+  readonly size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
 }
 
 export default function Modal({
-  isOpen,
-  onClose,
+  open,
+  onOpenChange,
   title,
   children,
   footer,
   size = 'md',
 }: ModalProps) {
+  const sizeClasses = {
+    sm: 'max-w-md',
+    md: 'max-w-lg',
+    lg: 'max-w-2xl',
+    xl: 'max-w-4xl',
+    '2xl': 'max-w-6xl',
+  };
+
   return (
-    <HeroModal
-      isOpen={isOpen}
-      onClose={onClose}
-      size={size}
-      scrollBehavior="inside"
-      classNames={{
-        base: 'max-h-[90vh]',
-        body: 'custom-scrollbar',
-      }}
-    >
-      <ModalContent>
-        {(onClose) => (
-          <>
-            <ModalHeader className="flex flex-col gap-1">{title}</ModalHeader>
-            <ModalBody>{children}</ModalBody>
-            {footer && <ModalFooter>{footer}</ModalFooter>}
-          </>
-        )}
-      </ModalContent>
-    </HeroModal>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        className={cn('max-h-[90vh] overflow-y-auto custom-scrollbar', sizeClasses[size])}
+      >
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+        <div className="py-4">{children}</div>
+        {footer && <DialogFooter>{footer}</DialogFooter>}
+      </DialogContent>
+    </Dialog>
   );
 }

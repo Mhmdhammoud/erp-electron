@@ -1,4 +1,4 @@
-import { Card as HeroCard, CardHeader, CardBody } from '@heroui/react';
+import { Card as ShadcnCard, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { ReactNode } from 'react';
 
 interface CardProps {
@@ -10,14 +10,14 @@ interface CardProps {
 
 export default function Card({ title, children, className = '', actions }: CardProps) {
   return (
-    <HeroCard className={className}>
+    <ShadcnCard className={className}>
       {(title || actions) && (
-        <CardHeader className="flex items-center justify-between">
-          {title && <h3 className="text-lg font-semibold">{title}</h3>}
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          {title && <CardTitle className="text-lg font-semibold">{title}</CardTitle>}
           {actions && <div>{actions}</div>}
         </CardHeader>
       )}
-      <CardBody>{children}</CardBody>
-    </HeroCard>
+      <CardContent className={title || actions ? 'pt-0' : ''}>{children}</CardContent>
+    </ShadcnCard>
   );
 }
