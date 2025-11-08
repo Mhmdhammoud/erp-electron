@@ -5,110 +5,26 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @layer base {
-  * {
-    @apply border-border;
-  }
   body {
-    @apply bg-gray-50 text-gray-900 antialiased;
     font-family: 'Inter', system-ui, sans-serif;
   }
 }
 
-@layer components {
+@layer utilities {
   /* Custom scrollbar */
   .custom-scrollbar::-webkit-scrollbar {
     @apply w-2 h-2;
   }
 
   .custom-scrollbar::-webkit-scrollbar-track {
-    @apply bg-gray-100;
+    @apply bg-default-100;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-gray-300 rounded-full;
+    @apply bg-default-300 rounded-full;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    @apply bg-gray-400;
+    @apply bg-default-400;
   }
-
-  /* Card component */
-  .card {
-    @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
-  }
-
-  /* Button variants */
-  .btn-primary {
-    @apply bg-primary-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
-  }
-
-  .btn-secondary {
-    @apply bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
-  }
-
-  .btn-danger {
-    @apply bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
-  }
-
-  /* Input styles */
-  .input {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
-  }
-
-  /* Table styles */
-  .table {
-    @apply w-full text-sm text-left;
-  }
-
-  .table thead {
-    @apply bg-gray-50 border-b border-gray-200;
-  }
-
-  .table th {
-    @apply px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider;
-  }
-
-  .table td {
-    @apply px-6 py-4 whitespace-nowrap;
-  }
-
-  .table tbody tr {
-    @apply border-b border-gray-200 hover:bg-gray-50 transition-colors;
-  }
-
-  /* Badge styles */
-  .badge {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
-  }
-
-  .badge-success {
-    @apply bg-green-100 text-green-800;
-  }
-
-  .badge-warning {
-    @apply bg-yellow-100 text-yellow-800;
-  }
-
-  .badge-danger {
-    @apply bg-red-100 text-red-800;
-  }
-
-  .badge-info {
-    @apply bg-blue-100 text-blue-800;
-  }
-
-  .badge-gray {
-    @apply bg-gray-100 text-gray-800;
-  }
-}
-
-/* Loading spinner */
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.animate-spin {
-  animation: spin 1s linear infinite;
 }

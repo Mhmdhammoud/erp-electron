@@ -8,11 +8,11 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
+    <div className="h-screen flex flex-col overflow-hidden bg-background">
       <Header />
       <div className="flex-1 flex overflow-hidden">
         <Sidebar />
-        <main className="flex-1 overflow-y-auto bg-gray-50 custom-scrollbar">
+        <main className="flex-1 overflow-y-auto custom-scrollbar">
           <div className="max-w-7xl mx-auto px-6 py-8">
             {children}
           </div>

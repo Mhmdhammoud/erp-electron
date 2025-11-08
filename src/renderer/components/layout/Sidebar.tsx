@@ -1,4 +1,5 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
+import { Listbox, ListboxItem } from '@heroui/react';
 import {
   LayoutDashboard,
   Package,
@@ -18,30 +19,35 @@ const navigation = [
 ];
 
 export default function Sidebar() {
+  const location = useLocation();
+
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
-      <nav className="flex-1 px-4 py-6 space-y-1">
-        {navigation.map((item) => (
-          <NavLink
-            key={item.name}
-            to={item.href}
-            className={({ isActive }) =>
-              `flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
-                isActive
-                  ? 'bg-primary-50 text-primary-700'
-                  : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-              }`
-            }
-          >
-            <item.icon className="mr-3 h-5 w-5" />
-            {item.name}
-          </NavLink>
-        ))}
+    <aside className="w-64 bg-background border-r border-divider flex flex-col">
+      <nav className="flex-1 px-3 py-6">
+        <Listbox
+          aria-label="Navigation"
+          variant="flat"
+          selectedKeys={[location.pathname]}
+        >
+          {navigation.map((item) => (
+            <ListboxItem
+              key={item.href}
+              as={NavLink}
+              to={item.href}
+              startContent={<item.icon className="w-5 h-5" />}
+              classNames={{
+                base: "mb-1",
+              }}
+            >
+              {item.name}
+            </ListboxItem>
+          ))}
+        </Listbox>
       </nav>
 
       {/* Footer */}
-      <div className="p-4 border-t border-gray-200">
-        <p className="text-xs text-gray-500 text-center">
+      <div className="p-4 border-t border-divider">
+        <p className="text-xs text-default-500 text-center">
           ERP System v1.0.0
         </p>
       </div>
