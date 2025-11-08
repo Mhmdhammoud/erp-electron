@@ -34,6 +34,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Plus, Search, Edit, Trash, MapPin, Mail, Phone } from 'lucide-react';
 import {
   useGetCustomersQuery,
+  useSearchCustomersQuery,
   useCreateCustomerMutation,
   useUpdateCustomerMutation,
   useDeleteCustomerMutation,
@@ -78,20 +79,47 @@ export default function Customers() {
 
   const { toast } = useToast();
 
-  const { data, loading, refetch } = useGetCustomersQuery({
-    variables: { filter: { search: searchTerm } },
+  // Use searchCustomers when there's a search term, otherwise use customers
+  const hasSearchTerm = searchTerm.trim().length > 0;
+
+  const {
+    data: customersData,
+    loading: customersLoading,
+    refetch: refetchCustomers,
+  } = useGetCustomersQuery({
+    variables: { filter: {} },
+    skip: hasSearchTerm,
   });
+
+  const {
+    data: searchData,
+    loading: searchLoading,
+    refetch: refetchSearch,
+  } = useSearchCustomersQuery({
+    variables: {
+      searchTerm: searchTerm.trim(),
+      filter: {},
+    },
+    skip: !hasSearchTerm,
+  });
+
+  const loading = customersLoading || searchLoading;
+  const refetch = hasSearchTerm ? refetchSearch : refetchCustomers;
 
   const [createCustomer, { loading: creating }] = useCreateCustomerMutation();
   const [updateCustomer, { loading: updating }] = useUpdateCustomerMutation();
   const [deleteCustomer, { loading: deleting }] = useDeleteCustomerMutation();
 
-  const customers = data?.customers?.customers || [];
+  const customers =
+    (hasSearchTerm
+      ? searchData?.searchCustomers?.customers
+      : customersData?.customers?.customers) || [];
 
   const handleOpenDialog = (customer?: any) => {
     if (customer) {
       setEditingCustomer(customer);
-      const defaultAddress = customer.addresses?.find((a: any) => a.is_default) || customer.addresses?.[0];
+      const defaultAddress =
+        customer.addresses?.find((a: any) => a.is_default) || customer.addresses?.[0];
       setFormData({
         name: customer.name || '',
         email: customer.email || '',
@@ -279,7 +307,8 @@ export default function Customers() {
               </TableHeader>
               <TableBody>
                 {customers.map((customer: any) => {
-                  const defaultAddress = customer.addresses?.find((a: any) => a.is_default) || customer.addresses?.[0];
+                  const defaultAddress =
+                    customer.addresses?.find((a: any) => a.is_default) || customer.addresses?.[0];
 
                   return (
                     <TableRow key={customer._id}>
@@ -349,9 +378,7 @@ export default function Customers() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
-              {editingCustomer ? 'Edit Customer' : 'Create New Customer'}
-            </DialogTitle>
+            <DialogTitle>{editingCustomer ? 'Edit Customer' : 'Create New Customer'}</DialogTitle>
             <DialogDescription>
               {editingCustomer
                 ? 'Update the customer information below.'
@@ -401,9 +428,7 @@ export default function Customers() {
                   <Input
                     id="street"
                     value={formData.street}
-                    onChange={(e) =>
-                      setFormData({ ...formData, street: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, street: e.target.value })}
                   />
                 </div>
 
@@ -413,9 +438,7 @@ export default function Customers() {
                     <Input
                       id="city"
                       value={formData.city}
-                      onChange={(e) =>
-                        setFormData({ ...formData, city: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
@@ -423,9 +446,7 @@ export default function Customers() {
                     <Input
                       id="state"
                       value={formData.state}
-                      onChange={(e) =>
-                        setFormData({ ...formData, state: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, state: e.target.value })}
                     />
                   </div>
                 </div>
@@ -436,9 +457,7 @@ export default function Customers() {
                     <Input
                       id="postalCode"
                       value={formData.postalCode}
-                      onChange={(e) =>
-                        setFormData({ ...formData, postalCode: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
@@ -446,9 +465,7 @@ export default function Customers() {
                     <Input
                       id="country"
                       value={formData.country}
-                      onChange={(e) =>
-                        setFormData({ ...formData, country: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                     />
                   </div>
                 </div>
@@ -460,9 +477,7 @@ export default function Customers() {
               <Textarea
                 id="notes"
                 value={formData.notes}
-                onChange={(e) =>
-                  setFormData({ ...formData, notes: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 rows={3}
                 placeholder="Additional notes about this customer..."
               />
@@ -476,8 +491,8 @@ export default function Customers() {
                 {creating || updating
                   ? 'Saving...'
                   : editingCustomer
-                  ? 'Update Customer'
-                  : 'Create Customer'}
+                    ? 'Update Customer'
+                    : 'Create Customer'}
               </Button>
             </DialogFooter>
           </form>
@@ -490,14 +505,12 @@ export default function Customers() {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the customer "{deletingCustomer?.name}". This
-              action cannot be undone.
+              This will permanently delete the customer "{deletingCustomer?.name}". This action
+              cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDeletingCustomer(null)}>
-              Cancel
-            </AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setDeletingCustomer(null)}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={deleting}

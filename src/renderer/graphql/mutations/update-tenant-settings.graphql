@@ -1,7 +1,7 @@
 mutation UpdateTenantSettings($id: ID!, $input: UpdateTenantInput!) {
   updateTenant(id: $id, input: $input) {
     tenant {
-      id
+      _id
       name
       branding {
         logo_url

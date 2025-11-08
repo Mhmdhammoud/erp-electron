@@ -1,7 +1,7 @@
-mutation RecordPayment($input: RecordPaymentInput!) {
-  recordPayment(input: $input) {
+mutation RecordPayment($id: ID!, $input: RecordPaymentInput!) {
+  recordPayment(id: $id, input: $input) {
     invoice {
-      id
+      _id
       paid_amount_usd
       payment_status
     }

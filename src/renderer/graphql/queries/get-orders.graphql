@@ -1,7 +1,7 @@
 query GetOrders($filter: OrderFilterInput) {
   orders(filter: $filter) {
     orders {
-      id
+      _id
       customer_id
       items {
         product_id

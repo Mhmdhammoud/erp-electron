@@ -1,7 +1,7 @@
 query GetProduct($id: ID!) {
   product(id: $id) {
     product {
-      id
+      _id
       sku
       name
       category

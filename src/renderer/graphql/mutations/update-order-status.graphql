@@ -1,7 +1,7 @@
 mutation UpdateOrderStatus($id: ID!, $input: UpdateOrderStatusInput!) {
   updateOrderStatus(id: $id, input: $input) {
     order {
-      id
+      _id
       status
     }
     error {

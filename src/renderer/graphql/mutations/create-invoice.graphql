@@ -1,16 +1,17 @@
 mutation CreateInvoice($input: CreateInvoiceInput!) {
   createInvoice(input: $input) {
     invoice {
-      id
+      _id
       invoice_number
       order_id
       customer_id
-      items {
-        product_id
-        product_name
-        quantity
-        unit_price_usd
-        subtotal_usd
+      payments {
+        date
+        amount_usd
+        amount_lbp
+        payment_method
+        notes
+        recorded_by
       }
       total_usd
       paid_amount_usd

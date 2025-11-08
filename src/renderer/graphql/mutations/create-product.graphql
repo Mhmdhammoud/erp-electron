@@ -1,7 +1,7 @@
 mutation CreateProduct($input: CreateProductInput!) {
   createProduct(input: $input) {
     product {
-      id
+      _id
       sku
       name
       category

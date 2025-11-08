@@ -1,7 +1,7 @@
 mutation CreateOrder($input: CreateOrderInput!) {
   createOrder(input: $input) {
     order {
-      id
+      _id
       customer_id
       items {
         product_id

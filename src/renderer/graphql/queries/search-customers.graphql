@@ -1,0 +1,28 @@
+query SearchCustomers($searchTerm: String!, $filter: CustomerFilterInput) {
+  searchCustomers(searchTerm: $searchTerm, filter: $filter) {
+    customers {
+      _id
+      name
+      email
+      phone
+      addresses {
+        type
+        street
+        city
+        state
+        postal_code
+        country
+        is_default
+      }
+      notes
+    }
+    error {
+      field
+      message
+    }
+    length
+    page
+    limit
+  }
+}
+

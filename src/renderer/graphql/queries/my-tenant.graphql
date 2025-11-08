@@ -1,7 +1,7 @@
 query MyTenant {
   myTenant {
     tenant {
-      id
+      _id
       name
       email
       phone

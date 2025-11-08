@@ -15,7 +15,7 @@ export interface CurrencyConfig {
 }
 
 export interface Tenant {
-  id: string;
+  _id: string;
   name: string;
   email?: string;
   phone?: string;
@@ -33,7 +33,7 @@ export function useTenant() {
     fetchPolicy: 'cache-and-network',
   });
 
-  const tenant = data?.myTenant?.data as Tenant | undefined;
+  const tenant = data?.myTenant?.tenant as Tenant | undefined;
 
   return {
     tenant,

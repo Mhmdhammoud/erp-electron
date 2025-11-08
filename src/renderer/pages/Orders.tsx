@@ -69,7 +69,7 @@ const ORDER_WIZARD_STEPS = [
 ];
 
 export default function Orders() {
-  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
 
@@ -84,7 +84,7 @@ export default function Orders() {
   const { formatDual } = useCurrency();
 
   const { data: ordersData, loading, refetch } = useGetOrdersQuery({
-    variables: { filter: statusFilter ? { status: statusFilter } : undefined },
+    variables: { filter: statusFilter && statusFilter !== 'all' ? { status: statusFilter } : undefined },
   });
 
   const { data: customersData } = useGetCustomersQuery();
@@ -280,7 +280,7 @@ export default function Orders() {
                   <SelectValue placeholder="All Statuses" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Statuses</SelectItem>
+                  <SelectItem value="all">All Statuses</SelectItem>
                   <SelectItem value={OrderStatus.DRAFT}>Draft</SelectItem>
                   <SelectItem value={OrderStatus.CONFIRMED}>Confirmed</SelectItem>
                   <SelectItem value={OrderStatus.SHIPPED}>Shipped</SelectItem>

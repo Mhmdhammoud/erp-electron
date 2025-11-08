@@ -1,7 +1,7 @@
 query GetProducts($filter: ProductFilterInput) {
   products(filter: $filter) {
     products {
-      id
+      _id
       sku
       name
       category

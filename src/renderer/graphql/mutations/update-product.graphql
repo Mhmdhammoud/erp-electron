@@ -1,7 +1,7 @@
 mutation UpdateProduct($id: ID!, $input: UpdateProductInput!) {
   updateProduct(id: $id, input: $input) {
     product {
-      id
+      _id
       sku
       name
       category
