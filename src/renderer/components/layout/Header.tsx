@@ -2,6 +2,7 @@ import { UserButton } from '@clerk/clerk-react';
 import { useTenant } from '../../hooks/useTenant';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { ThemeToggle } from '../theme-toggle';
 import { Bell, Settings } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -38,6 +39,9 @@ export default function Header() {
             5
           </span>
         </div>
+
+        {/* Theme Toggle */}
+        <ThemeToggle />
 
         {/* Settings */}
         <Button asChild variant="ghost" size="icon" aria-label="Settings">
