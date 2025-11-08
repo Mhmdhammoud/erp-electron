@@ -23,14 +23,15 @@
     /* Path mapping */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
+      "@/*": ["src/renderer/*"],
       "@/components/*": ["src/renderer/components/*"],
       "@/pages/*": ["src/renderer/pages/*"],
       "@/hooks/*": ["src/renderer/hooks/*"],
       "@/store/*": ["src/renderer/store/*"],
       "@/graphql/*": ["src/renderer/graphql/*"],
       "@/utils/*": ["src/renderer/utils/*"],
-      "@/types/*": ["src/renderer/types/*"]
+      "@/types/*": ["src/renderer/types/*"],
+      "@/lib/*": ["src/renderer/lib/*"]
     }
   },
   "include": ["src"],

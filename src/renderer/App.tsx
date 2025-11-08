@@ -7,8 +7,7 @@ import {
   useAuth as useClerkAuth,
 } from '@clerk/clerk-react';
 import { ApolloProvider } from '@apollo/client';
-import { HeroUIProvider } from '@heroui/react';
-import { Toaster } from 'react-hot-toast';
+import { Toaster } from './components/ui/toaster';
 import { apolloClient, setAuthTokenGetter } from './graphql/client';
 import Layout from './components/layout/Layout';
 import { Component, ErrorInfo, ReactNode, useEffect } from 'react';
@@ -130,46 +129,44 @@ function App() {
       >
         <AuthTokenSetter />
         <ApolloProvider client={apolloClient}>
-          <HeroUIProvider>
-            <Router>
-              <SignedIn>
-                <Layout>
-                  <Routes>
-                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/products" element={<Products />} />
-                    <Route path="/customers" element={<Customers />} />
-                    <Route path="/orders" element={<Orders />} />
-                    <Route path="/invoices" element={<Invoices />} />
-                    <Route path="/settings" element={<Settings />} />
-                  </Routes>
-                </Layout>
-              </SignedIn>
-              <SignedOut>
+          <Router>
+            <SignedIn>
+              <Layout>
+                <Routes>
+                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/products" element={<Products />} />
+                  <Route path="/customers" element={<Customers />} />
+                  <Route path="/orders" element={<Orders />} />
+                  <Route path="/invoices" element={<Invoices />} />
+                  <Route path="/settings" element={<Settings />} />
+                </Routes>
+              </Layout>
+            </SignedIn>
+            <SignedOut>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  height: '100vh',
+                  width: '100vw',
+                  backgroundColor: '#f9fafb',
+                }}
+              >
                 <div
                   style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    height: '100vh',
-                    width: '100vw',
-                    backgroundColor: '#f9fafb',
+                    width: '100%',
+                    maxWidth: '400px',
+                    padding: '2rem',
                   }}
                 >
-                  <div
-                    style={{
-                      width: '100%',
-                      maxWidth: '400px',
-                      padding: '2rem',
-                    }}
-                  >
-                    <SignIn routing="hash" signUpUrl="/sign-up" />
-                  </div>
+                  <SignIn routing="hash" signUpUrl="/sign-up" />
                 </div>
-              </SignedOut>
-            </Router>
-            <Toaster position="top-right" />
-          </HeroUIProvider>
+              </div>
+            </SignedOut>
+          </Router>
+          <Toaster />
         </ApolloProvider>
       </ClerkProvider>
     </ErrorBoundary>
