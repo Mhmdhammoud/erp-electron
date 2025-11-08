@@ -1,0 +1,31 @@
+query MyTenant {
+  myTenant {
+    data {
+      id
+      name
+      email
+      phone
+      website
+      branding {
+        logoUrl
+        primaryColor
+        invoiceFooter
+        companyAddress
+      }
+      currencyConfig {
+        baseCurrency
+        secondaryCurrency
+        exchangeRate
+        updatedAt
+      }
+      language
+      status
+      createdAt
+      updatedAt
+    }
+    error {
+      field
+      message
+    }
+  }
+}

@@ -1,0 +1,15 @@
+query GetDashboardStats {
+  dashboardStats {
+    data {
+      total_revenue_usd
+      total_orders
+      total_customers
+      pending_orders
+      low_stock_count
+    }
+    error {
+      field
+      message
+    }
+  }
+}

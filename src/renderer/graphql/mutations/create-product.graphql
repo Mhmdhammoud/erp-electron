@@ -1,0 +1,21 @@
+mutation CreateProduct($input: CreateProductInput!) {
+  createProduct(input: $input) {
+    data {
+      id
+      sku
+      name
+      category
+      price_usd
+      quantity_in_stock
+      reorder_level
+      status
+      barcode
+      description
+      created_at
+    }
+    error {
+      field
+      message
+    }
+  }
+}

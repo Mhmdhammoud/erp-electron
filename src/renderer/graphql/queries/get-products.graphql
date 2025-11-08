@@ -1,0 +1,22 @@
+query GetProducts($filter: ProductFilterInput) {
+  products(filter: $filter) {
+    data {
+      id
+      sku
+      name
+      category
+      price_usd
+      quantity_in_stock
+      reorder_level
+      status
+      barcode
+      description
+      created_at
+      updated_at
+    }
+    error {
+      field
+      message
+    }
+  }
+}

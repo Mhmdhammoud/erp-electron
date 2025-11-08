@@ -1,0 +1,23 @@
+query GetProduct($id: String!) {
+  product(id: $id) {
+    data {
+      id
+      sku
+      name
+      category
+      price_usd
+      quantity_in_stock
+      reorder_level
+      status
+      barcode
+      description
+      supplier_info
+      created_at
+      updated_at
+    }
+    error {
+      field
+      message
+    }
+  }
+}

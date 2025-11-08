@@ -1,0 +1,91 @@
+{
+  "name": "erp-electron",
+  "version": "1.0.0",
+  "description": "Multi-Tenant Retail ERP System - Electron Desktop Application",
+  "main": "dist-electron/main.js",
+  "author": "ERP Team",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build && electron-builder",
+    "build:dev": "tsc && vite build",
+    "preview": "vite preview",
+    "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
+    "electron:build": "npm run build:dev && electron-builder",
+    "codegen": "graphql-codegen --config codegen.config.ts",
+    "codegen:watch": "graphql-codegen --config codegen.config.ts --watch",
+    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "format": "prettier --write \"src/**/*.{ts,tsx,json,css}\""
+  },
+  "dependencies": {
+    "@apollo/client": "^3.8.8",
+    "@clerk/clerk-react": "^4.30.0",
+    "@heroui/react": "^2.2.9",
+    "@tanstack/react-table": "^8.11.2",
+    "apollo3-cache-persist": "^0.15.0",
+    "date-fns": "^2.30.0",
+    "framer-motion": "^10.16.16",
+    "graphql": "^16.8.1",
+    "i18next": "^23.7.8",
+    "lucide-react": "^0.294.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.49.2",
+    "react-i18next": "^13.5.0",
+    "react-router-dom": "^6.20.1",
+    "recharts": "^2.10.3",
+    "zod": "^3.22.4",
+    "zustand": "^4.4.7"
+  },
+  "devDependencies": {
+    "@graphql-codegen/cli": "^5.0.0",
+    "@graphql-codegen/typescript": "^4.0.1",
+    "@graphql-codegen/typescript-operations": "^4.0.1",
+    "@graphql-codegen/typescript-react-apollo": "^4.0.0",
+    "@types/node": "^20.10.5",
+    "@types/react": "^18.2.43",
+    "@types/react-dom": "^18.2.17",
+    "@typescript-eslint/eslint-plugin": "^6.15.0",
+    "@typescript-eslint/parser": "^6.15.0",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.16",
+    "concurrently": "^8.2.2",
+    "electron": "^27.1.3",
+    "electron-builder": "^24.9.1",
+    "eslint": "^8.56.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.5",
+    "postcss": "^8.4.32",
+    "prettier": "^3.1.1",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.8",
+    "vite-plugin-electron": "^0.28.1",
+    "vite-plugin-electron-renderer": "^0.14.5",
+    "wait-on": "^7.2.0"
+  },
+  "build": {
+    "appId": "com.erp.desktop",
+    "productName": "ERP System",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist-electron",
+      "dist"
+    ],
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.business"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "linux": {
+      "target": "AppImage",
+      "category": "Office"
+    }
+  }
+}
