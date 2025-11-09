@@ -33,7 +33,11 @@ import InvoiceDetail from './pages/InvoiceDetail';
 import InvoiceEdit from './pages/InvoiceEdit';
 import Settings from './pages/Settings';
 
-const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string;
+
+if (!CLERK_PUBLISHABLE_KEY) {
+  console.error('VITE_CLERK_PUBLISHABLE_KEY is not set');
+}
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -100,11 +104,7 @@ function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light" storageKey="erp-ui-theme">
-        <ClerkProvider
-          publishableKey={CLERK_PUBLISHABLE_KEY}
-          routerPush={(to) => window.history.pushState(null, '', to)}
-          routerReplace={(to) => window.history.replaceState(null, '', to)}
-        >
+        <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
           <AuthTokenSetter />
           <ApolloProvider client={apolloClient}>
             <Router>

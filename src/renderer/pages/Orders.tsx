@@ -46,10 +46,8 @@ import {
 import { useCurrency } from '../hooks/useCurrency';
 import {
   useGetOrdersQuery,
-  useSearchOrdersQuery,
   useCreateOrderMutation,
   useUpdateOrderStatusMutation,
-  useDeleteOrderMutation,
   useGetCustomersQuery,
   useGetProductsQuery,
   type OrderItemInput,
@@ -103,14 +101,6 @@ export default function Orders() {
     skip: searchTerm.length > 0,
   });
 
-  const { data: searchData, loading: searchLoading, refetch: refetchSearch } = useSearchOrdersQuery({
-    variables: {
-      searchTerm,
-      filter: statusFilter && statusFilter !== 'all' ? { status: statusFilter } : undefined,
-    },
-    skip: searchTerm.length === 0,
-  });
-
   const { data: customersData } = useGetCustomersQuery();
   const { data: productsData } = useGetProductsQuery({
     variables: { filter: { search: productSearch } },
@@ -118,23 +108,16 @@ export default function Orders() {
 
   const [createOrder, { loading: creating }] = useCreateOrderMutation();
   const [updateOrderStatus] = useUpdateOrderStatusMutation();
-  const [deleteOrder, { loading: deleting }] = useDeleteOrderMutation();
 
-  // Use search results if searching, otherwise use regular results
-  const isSearching = searchTerm.length > 0;
-  const activeData = isSearching ? searchData?.searchOrders : ordersData?.orders;
-  const orders = activeData?.orders || [];
+  // Use regular results
+  const orders = ordersData?.orders?.orders || [];
   const customers = customersData?.customers?.customers || [];
   const products = productsData?.products?.products || [];
-  const totalItems = activeData?.length || 0;
-  const isLoading = isSearching ? searchLoading : loading;
+  const totalItems = ordersData?.orders?.length || 0;
+  const isLoading = loading;
 
   const handleRefetch = () => {
-    if (isSearching) {
-      refetchSearch();
-    } else {
-      refetch();
-    }
+    refetch();
   };
 
   const handleOpenCreateDialog = () => {
@@ -307,34 +290,14 @@ export default function Orders() {
   const handleConfirmDelete = async () => {
     if (!orderToDelete) return;
 
-    try {
-      const result = await deleteOrder({
-        variables: { id: orderToDelete },
-      });
-
-      if (result.data?.deleteOrder?.error) {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: result.data.deleteOrder.error.message,
-        });
-      } else {
-        toast({
-          title: 'Success',
-          description: 'Order deleted successfully',
-        });
-        handleRefetch();
-      }
-    } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: error.message || 'Failed to delete order',
-      });
-    } finally {
-      setDeleteDialogOpen(false);
-      setOrderToDelete(null);
-    }
+    // TODO: Implement cancel order functionality when available in backend
+    toast({
+      variant: 'destructive',
+      title: 'Not Available',
+      description: 'Delete order functionality is not available yet. Use cancel order instead.',
+    });
+    setDeleteDialogOpen(false);
+    setOrderToDelete(null);
   };
 
   const selectedCustomer = customers.find((c: any) => c._id === selectedCustomerId);
@@ -464,7 +427,7 @@ export default function Orders() {
               </TableBody>
             </Table>
           )}
-          {!isLoading && orders.length > 0 && !isSearching && (
+          {!isLoading && orders.length > 0 && (
             <Pagination
               currentPage={page}
               totalItems={totalItems}
@@ -784,9 +747,9 @@ export default function Orders() {
               type="button"
               variant="destructive"
               onClick={handleConfirmDelete}
-              disabled={deleting}
+              disabled={false}
             >
-              {deleting ? 'Deleting...' : 'Delete'}
+              Delete
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -64,30 +64,30 @@ export enum TenantStatus {
 }
 
 // Status Badge Colors
-export const STATUS_COLORS = {
+export const STATUS_COLORS: Record<string, string> = {
   // Product
-  [ProductStatus.ACTIVE]: 'badge-success',
-  [ProductStatus.INACTIVE]: 'badge-gray',
-  [ProductStatus.DISCONTINUED]: 'badge-danger',
+  'active': 'badge-success',
+  'inactive': 'badge-gray',
+  'discontinued': 'badge-danger',
 
   // Customer
-  [CustomerStatus.ACTIVE]: 'badge-success',
-  [CustomerStatus.INACTIVE]: 'badge-gray',
-  [CustomerStatus.BLOCKED]: 'badge-danger',
+  'customer-active': 'badge-success',
+  'customer-inactive': 'badge-gray',
+  'blocked': 'badge-danger',
 
   // Order
-  [OrderStatus.DRAFT]: 'badge-gray',
-  [OrderStatus.CONFIRMED]: 'badge-info',
-  [OrderStatus.SHIPPED]: 'badge-warning',
-  [OrderStatus.INVOICED]: 'badge-success',
-  [OrderStatus.CANCELLED]: 'badge-danger',
+  'draft': 'badge-gray',
+  'confirmed': 'badge-info',
+  'shipped': 'badge-warning',
+  'invoiced': 'badge-success',
+  'order-cancelled': 'badge-danger',
 
   // Payment
-  [PaymentStatus.UNPAID]: 'badge-danger',
-  [PaymentStatus.PARTIAL]: 'badge-warning',
-  [PaymentStatus.PAID]: 'badge-success',
-  [PaymentStatus.OVERDUE]: 'badge-danger',
-  [PaymentStatus.CANCELLED]: 'badge-gray',
+  'unpaid': 'badge-danger',
+  'partial': 'badge-warning',
+  'paid': 'badge-success',
+  'overdue': 'badge-danger',
+  'payment-cancelled': 'badge-gray',
 };
 
 // Default Exchange Rate (USD to LBP)

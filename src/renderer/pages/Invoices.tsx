@@ -35,10 +35,8 @@ import { Plus, Filter, DollarSign, FileText, AlertCircle, Receipt, Trash, Search
 import { useCurrency } from '../hooks/useCurrency';
 import {
   useGetInvoicesQuery,
-  useSearchInvoicesQuery,
   useCreateInvoiceMutation,
   useRecordPaymentMutation,
-  useDeleteInvoiceMutation,
   useGetOrdersQuery,
   useGetCustomersQuery,
 } from '../types/generated';
@@ -81,36 +79,21 @@ export default function Invoices() {
     skip: searchTerm.length > 0,
   });
 
-  const { data: searchData, loading: searchLoading, refetch: refetchSearch } = useSearchInvoicesQuery({
-    variables: {
-      searchTerm,
-      filter: statusFilter && statusFilter !== 'all' ? { payment_status: statusFilter } : undefined,
-    },
-    skip: searchTerm.length === 0,
-  });
-
   const { data: ordersData } = useGetOrdersQuery();
   const { data: customersData } = useGetCustomersQuery();
 
   const [createInvoice, { loading: creating }] = useCreateInvoiceMutation();
   const [recordPayment, { loading: recording }] = useRecordPaymentMutation();
-  const [deleteInvoice, { loading: deleting }] = useDeleteInvoiceMutation();
 
-  // Use search results if searching, otherwise use regular results
-  const isSearching = searchTerm.length > 0;
-  const activeData = isSearching ? searchData?.searchInvoices : invoicesData?.invoices;
-  const invoices = activeData?.invoices || [];
+  // Use regular results
+  const invoices = invoicesData?.invoices?.invoices || [];
   const orders = ordersData?.orders?.orders || [];
   const customers = customersData?.customers?.customers || [];
-  const totalItems = activeData?.length || 0;
-  const isLoading = isSearching ? searchLoading : loading;
+  const totalItems = invoicesData?.invoices?.length || 0;
+  const isLoading = loading;
 
   const handleRefetch = () => {
-    if (isSearching) {
-      refetchSearch();
-    } else {
-      refetch();
-    }
+    refetch();
   };
 
   const handleOpenCreateDialog = () => {
@@ -265,34 +248,14 @@ export default function Invoices() {
   const handleConfirmDelete = async () => {
     if (!invoiceToDelete) return;
 
-    try {
-      const result = await deleteInvoice({
-        variables: { id: invoiceToDelete },
-      });
-
-      if (result.data?.deleteInvoice?.error) {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: result.data.deleteInvoice.error.message,
-        });
-      } else {
-        toast({
-          title: 'Success',
-          description: 'Invoice deleted successfully',
-        });
-        handleRefetch();
-      }
-    } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: error.message || 'Failed to delete invoice',
-      });
-    } finally {
-      setDeleteDialogOpen(false);
-      setInvoiceToDelete(null);
-    }
+    // TODO: Implement cancel invoice functionality when available in backend
+    toast({
+      variant: 'destructive',
+      title: 'Not Available',
+      description: 'Delete invoice functionality is not available yet. Use cancel invoice instead.',
+    });
+    setDeleteDialogOpen(false);
+    setInvoiceToDelete(null);
   };
 
   const getStatusBadgeVariant = (status: string) => {
@@ -455,7 +418,7 @@ export default function Invoices() {
               </TableBody>
             </Table>
           )}
-          {!isLoading && invoices.length > 0 && !isSearching && (
+          {!isLoading && invoices.length > 0 && (
             <Pagination
               currentPage={page}
               totalItems={totalItems}
@@ -704,9 +667,9 @@ export default function Invoices() {
               type="button"
               variant="destructive"
               onClick={handleConfirmDelete}
-              disabled={deleting}
+              disabled={false}
             >
-              {deleting ? 'Deleting...' : 'Delete'}
+              Delete
             </Button>
           </DialogFooter>
         </DialogContent>

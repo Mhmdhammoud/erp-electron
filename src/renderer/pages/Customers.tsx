@@ -92,7 +92,7 @@ export default function Customers() {
     loading: customersLoading,
     refetch: refetchCustomers,
   } = useGetCustomersQuery({
-    variables: { page, limit },
+    variables: { filter: { page, limit } },
     skip: hasSearchTerm,
   });
 

@@ -9,7 +9,7 @@ import { useToast } from '../hooks/use-toast';
 import { useGetOrderQuery, useUpdateOrderStatusMutation } from '../types/generated';
 import { Skeleton } from '../components/ui/skeleton';
 import { Badge } from '../components/ui/badge';
-import { useCurrency } from '../hooks/use-currency';
+import { useCurrency } from '../hooks/useCurrency';
 
 interface OrderStatusFormData {
   status: string;

@@ -3,7 +3,7 @@ query GetOrder($id: ID!) {
     order {
       _id
       customer_id
-      order_date
+      order_number
       status
       currency_used
       exchange_rate_used
@@ -15,9 +15,7 @@ query GetOrder($id: ID!) {
         product_sku
         quantity
         unit_price_usd
-        unit_price_lbp
         subtotal_usd
-        subtotal_lbp
       }
       notes
     }
