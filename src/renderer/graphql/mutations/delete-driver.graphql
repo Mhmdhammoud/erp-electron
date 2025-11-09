@@ -1,0 +1,12 @@
+mutation DeleteDriver($id: ID!) {
+  deleteDriver(id: $id) {
+    driver {
+      _id
+      driver_code
+    }
+    error {
+      field
+      message
+    }
+  }
+}

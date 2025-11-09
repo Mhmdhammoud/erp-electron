@@ -1,0 +1,12 @@
+mutation DeleteVehicle($id: ID!) {
+  deleteVehicle(id: $id) {
+    vehicle {
+      _id
+      vehicle_code
+    }
+    error {
+      field
+      message
+    }
+  }
+}

@@ -1,0 +1,18 @@
+mutation UpdateDriver($id: ID!, $input: UpdateDriverInput!) {
+  updateDriver(id: $id, input: $input) {
+    driver {
+      _id
+      driver_code
+      first_name
+      last_name
+      status
+      license {
+        expiry_date
+      }
+    }
+    error {
+      field
+      message
+    }
+  }
+}

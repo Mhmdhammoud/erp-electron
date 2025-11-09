@@ -1,0 +1,12 @@
+mutation AssignDriverToVehicle($vehicleId: ID!, $driverId: ID!) {
+  assignDriverToVehicle(vehicleId: $vehicleId, driverId: $driverId) {
+    vehicle {
+      _id
+      assigned_driver_id
+    }
+    error {
+      field
+      message
+    }
+  }
+}

@@ -1,0 +1,15 @@
+mutation CreateDriver($input: CreateDriverInput!) {
+  createDriver(input: $input) {
+    driver {
+      _id
+      driver_code
+      first_name
+      last_name
+      status
+    }
+    error {
+      field
+      message
+    }
+  }
+}

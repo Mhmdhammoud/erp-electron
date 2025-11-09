@@ -37,6 +37,14 @@ import WarehouseCreate from './pages/WarehouseCreate';
 import WarehouseDetail from './pages/WarehouseDetail';
 import WarehouseEdit from './pages/WarehouseEdit';
 import WarehouseTransfer from './pages/WarehouseTransfer';
+import Drivers from './pages/Drivers';
+import DriverCreate from './pages/DriverCreate';
+import DriverDetail from './pages/DriverDetail';
+import DriverEdit from './pages/DriverEdit';
+import Vehicles from './pages/Vehicles';
+import VehicleCreate from './pages/VehicleCreate';
+import VehicleDetail from './pages/VehicleDetail';
+import VehicleEdit from './pages/VehicleEdit';
 import Settings from './pages/Settings';
 
 const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string;
@@ -140,6 +148,14 @@ function App() {
                     <Route path="/warehouses/:id/edit" element={<WarehouseEdit />} />
                     <Route path="/warehouses/:id/transfer" element={<WarehouseTransfer />} />
                     <Route path="/warehouses/:id" element={<WarehouseDetail />} />
+                    <Route path="/drivers" element={<Drivers />} />
+                    <Route path="/drivers/new" element={<DriverCreate />} />
+                    <Route path="/drivers/:id/edit" element={<DriverEdit />} />
+                    <Route path="/drivers/:id" element={<DriverDetail />} />
+                    <Route path="/vehicles" element={<Vehicles />} />
+                    <Route path="/vehicles/new" element={<VehicleCreate />} />
+                    <Route path="/vehicles/:id/edit" element={<VehicleEdit />} />
+                    <Route path="/vehicles/:id" element={<VehicleDetail />} />
                     <Route path="/settings" element={<Settings />} />
                   </Routes>
                 </Layout>
