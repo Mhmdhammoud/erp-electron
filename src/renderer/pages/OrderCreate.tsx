@@ -20,7 +20,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import {
   ArrowLeft,
@@ -42,7 +41,7 @@ import {
   type OrderItemInput,
 } from '../types/generated';
 import { useToast } from '../hooks/use-toast';
-import { Currency } from '../utils/constants';
+import { Currency as CurrencyEnum } from '../types/generated';
 
 interface OrderItemForm {
   product_id: string;
@@ -65,7 +64,7 @@ export default function OrderCreate() {
 
   // Form state
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
-  const [selectedCurrency, setSelectedCurrency] = useState(Currency.USD);
+  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyEnum>(CurrencyEnum.Usd);
   const [orderItems, setOrderItems] = useState<OrderItemForm[]>([]);
   const [notes, setNotes] = useState('');
   const [productSearch, setProductSearch] = useState('');
@@ -169,7 +168,7 @@ export default function OrderCreate() {
             customer_id: selectedCustomerId,
             items,
             currency_used: selectedCurrency,
-            notes: notes || null,
+            notes: notes || undefined,
           },
         },
       });
@@ -277,13 +276,13 @@ export default function OrderCreate() {
 
             <div className="space-y-2">
               <Label htmlFor="currency">Currency</Label>
-              <Select value={selectedCurrency} onValueChange={setSelectedCurrency}>
+              <Select value={selectedCurrency} onValueChange={(value) => setSelectedCurrency(value as CurrencyEnum)}>
                 <SelectTrigger id="currency">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={Currency.USD}>USD</SelectItem>
-                  <SelectItem value={Currency.LBP}>LBP</SelectItem>
+                  <SelectItem value={CurrencyEnum.Usd}>USD</SelectItem>
+                  <SelectItem value={CurrencyEnum.Lbp}>LBP</SelectItem>
                 </SelectContent>
               </Select>
             </div>

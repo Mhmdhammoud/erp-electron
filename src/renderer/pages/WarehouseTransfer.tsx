@@ -40,9 +40,7 @@ export default function WarehouseTransfer() {
     skip: !id,
   });
 
-  const { data: warehousesData, loading: warehousesLoading } = useGetWarehousesQuery({
-    variables: { page: 1, limit: 100 },
-  });
+  const { data: warehousesData, loading: warehousesLoading } = useGetWarehousesQuery();
 
   const { data: inventoryData, loading: inventoryLoading } = useGetWarehouseInventoryQuery({
     variables: { warehouseId: id || '', page: 1, limit: 100 },
@@ -54,7 +52,6 @@ export default function WarehouseTransfer() {
     handleSubmit,
     formState: { errors },
     setValue,
-    watch,
   } = useForm<TransferFormData>();
 
   const [transferStock, { loading: transferring }] = useTransferStockMutation();
@@ -304,11 +301,7 @@ export default function WarehouseTransfer() {
 
             {/* Actions */}
             <div className="flex justify-end gap-4 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => navigate(`/warehouses/${id}`)}
-              >
+              <Button type="button" variant="outline" onClick={() => navigate(`/warehouses/${id}`)}>
                 Cancel
               </Button>
               <Button

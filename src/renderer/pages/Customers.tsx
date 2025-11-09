@@ -290,92 +290,97 @@ export default function Customers() {
         <CardContent>
           {loading ? (
             <div className="space-y-3">
-              {[...Array(5)].map((_, i) => (
-                <Skeleton key={i} className="h-16 w-full" />
+              {new Array(5).fill(null).map((_, i) => (
+                <Skeleton key={`skeleton-${i}`} className="h-16 w-full" />
               ))}
             </div>
-          ) : customers.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">
-                No customers found. Add your first customer to get started.
-              </p>
-            </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Address</TableHead>
-                  <TableHead>Notes</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {customers.map((customer: any) => {
-                  const defaultAddress =
-                    customer.addresses?.find((a: any) => a.is_default) || customer.addresses?.[0];
-
-                  return (
-                    <TableRow key={customer._id}>
-                      <TableCell className="font-medium">{customer.name}</TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          {customer.email && (
-                            <div className="flex items-center gap-2 text-sm">
-                              <Mail className="w-3 h-3 text-muted-foreground" />
-                              <span className="text-muted-foreground">{customer.email}</span>
-                            </div>
-                          )}
-                          {customer.phone && (
-                            <div className="flex items-center gap-2 text-sm">
-                              <Phone className="w-3 h-3 text-muted-foreground" />
-                              <span className="text-muted-foreground">{customer.phone}</span>
-                            </div>
-                          )}
-                          {!customer.email && !customer.phone && (
-                            <span className="text-muted-foreground">-</span>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {defaultAddress ? (
-                          <div className="flex items-start gap-2 text-sm">
-                            <MapPin className="w-3 h-3 text-muted-foreground mt-0.5" />
-                            <span className="text-muted-foreground">
-                              {defaultAddress.city}, {defaultAddress.country}
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="max-w-xs truncate text-muted-foreground">
-                        {customer.notes || '-'}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleOpenDialog(customer)}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => openDeleteDialog(customer)}
-                          >
-                            <Trash className="w-4 h-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
+            <>
+              {customers.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground">
+                    No customers found. Add your first customer to get started.
+                  </p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Contact</TableHead>
+                      <TableHead>Address</TableHead>
+                      <TableHead>Notes</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {customers.map((customer: any) => {
+                      const defaultAddress =
+                        customer.addresses?.find((a: any) => a.is_default) ||
+                        customer.addresses?.[0];
+
+                      return (
+                        <TableRow key={customer._id}>
+                          <TableCell className="font-medium">{customer.name}</TableCell>
+                          <TableCell>
+                            <div className="space-y-1">
+                              {customer.email && (
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Mail className="w-3 h-3 text-muted-foreground" />
+                                  <span className="text-muted-foreground">{customer.email}</span>
+                                </div>
+                              )}
+                              {customer.phone && (
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Phone className="w-3 h-3 text-muted-foreground" />
+                                  <span className="text-muted-foreground">{customer.phone}</span>
+                                </div>
+                              )}
+                              {!customer.email && !customer.phone && (
+                                <span className="text-muted-foreground">-</span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {defaultAddress ? (
+                              <div className="flex items-start gap-2 text-sm">
+                                <MapPin className="w-3 h-3 text-muted-foreground mt-0.5" />
+                                <span className="text-muted-foreground">
+                                  {defaultAddress.city}, {defaultAddress.country}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="max-w-xs truncate text-muted-foreground">
+                            {customer.notes || '-'}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleOpenDialog(customer)}
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => openDeleteDialog(customer)}
+                              >
+                                <Trash className="w-4 h-4 text-destructive" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              )}
+            </>
           )}
           {!loading && !hasSearchTerm && customers.length > 0 && (
             <Pagination
@@ -506,11 +511,11 @@ export default function Customers() {
                 Cancel
               </Button>
               <Button type="submit" disabled={creating || updating}>
-                {creating || updating
-                  ? 'Saving...'
-                  : editingCustomer
-                    ? 'Update Customer'
-                    : 'Create Customer'}
+                {(() => {
+                  if (creating || updating) return 'Saving...';
+                  if (editingCustomer) return 'Update Customer';
+                  return 'Create Customer';
+                })()}
               </Button>
             </DialogFooter>
           </form>

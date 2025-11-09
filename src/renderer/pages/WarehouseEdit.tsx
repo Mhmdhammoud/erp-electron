@@ -87,26 +87,25 @@ export default function WarehouseEdit() {
         country: warehouse.address.country,
         latitude: warehouse.address.coordinates?.latitude,
         longitude: warehouse.address.coordinates?.longitude,
-        contact_name: warehouse.contact?.name || '',
+        contact_name: warehouse.contact?.manager_name || '',
         contact_phone: warehouse.contact?.phone || '',
         contact_email: warehouse.contact?.email || '',
-        total_sqft: warehouse.capacity?.total_sqft,
-        storage_units: warehouse.capacity?.storage_units,
-        max_pallets: warehouse.capacity?.max_pallets,
-        monday_open: warehouse.operating_hours?.monday?.open || '',
-        monday_close: warehouse.operating_hours?.monday?.close || '',
-        tuesday_open: warehouse.operating_hours?.tuesday?.open || '',
-        tuesday_close: warehouse.operating_hours?.tuesday?.close || '',
-        wednesday_open: warehouse.operating_hours?.wednesday?.open || '',
-        wednesday_close: warehouse.operating_hours?.wednesday?.close || '',
-        thursday_open: warehouse.operating_hours?.thursday?.open || '',
-        thursday_close: warehouse.operating_hours?.thursday?.close || '',
-        friday_open: warehouse.operating_hours?.friday?.open || '',
-        friday_close: warehouse.operating_hours?.friday?.close || '',
-        saturday_open: warehouse.operating_hours?.saturday?.open || '',
-        saturday_close: warehouse.operating_hours?.saturday?.close || '',
-        sunday_open: warehouse.operating_hours?.sunday?.open || '',
-        sunday_close: warehouse.operating_hours?.sunday?.close || '',
+        total_sqft: warehouse.capacity?.total_sqft ?? undefined,
+        max_pallets: warehouse.capacity?.max_pallets ?? undefined,
+        monday_open: warehouse.operating_hours?.open || '',
+        monday_close: warehouse.operating_hours?.close || '',
+        tuesday_open: warehouse.operating_hours?.open || '',
+        tuesday_close: warehouse.operating_hours?.close || '',
+        wednesday_open: warehouse.operating_hours?.open || '',
+        wednesday_close: warehouse.operating_hours?.close || '',
+        thursday_open: warehouse.operating_hours?.open || '',
+        thursday_close: warehouse.operating_hours?.close || '',
+        friday_open: warehouse.operating_hours?.open || '',
+        friday_close: warehouse.operating_hours?.close || '',
+        saturday_open: warehouse.operating_hours?.open || '',
+        saturday_close: warehouse.operating_hours?.close || '',
+        sunday_open: warehouse.operating_hours?.open || '',
+        sunday_close: warehouse.operating_hours?.close || '',
       });
     }
   }, [warehouse, reset]);
@@ -142,43 +141,16 @@ export default function WarehouseEdit() {
               }
             : undefined,
         capacity:
-          formData.total_sqft || formData.storage_units || formData.max_pallets
+          formData.total_sqft || formData.max_pallets
             ? {
                 total_sqft: formData.total_sqft || undefined,
-                storage_units: formData.storage_units || undefined,
                 max_pallets: formData.max_pallets || undefined,
               }
             : undefined,
-        operating_hours: {
-          monday:
-            formData.monday_open && formData.monday_close
-              ? { open: formData.monday_open, close: formData.monday_close }
-              : undefined,
-          tuesday:
-            formData.tuesday_open && formData.tuesday_close
-              ? { open: formData.tuesday_open, close: formData.tuesday_close }
-              : undefined,
-          wednesday:
-            formData.wednesday_open && formData.wednesday_close
-              ? { open: formData.wednesday_open, close: formData.wednesday_close }
-              : undefined,
-          thursday:
-            formData.thursday_open && formData.thursday_close
-              ? { open: formData.thursday_open, close: formData.thursday_close }
-              : undefined,
-          friday:
-            formData.friday_open && formData.friday_close
-              ? { open: formData.friday_open, close: formData.friday_close }
-              : undefined,
-          saturday:
-            formData.saturday_open && formData.saturday_close
-              ? { open: formData.saturday_open, close: formData.saturday_close }
-              : undefined,
-          sunday:
-            formData.sunday_open && formData.sunday_close
-              ? { open: formData.sunday_open, close: formData.sunday_close }
-              : undefined,
-        },
+        operating_hours:
+          formData.monday_open && formData.monday_close
+            ? { open: formData.monday_open, close: formData.monday_close }
+            : undefined,
       };
 
       const { data } = await updateWarehouse({ variables: { id, input } });
@@ -387,16 +359,14 @@ export default function WarehouseEdit() {
             <Card>
               <CardHeader>
                 <CardTitle>Contact Information</CardTitle>
-                <CardDescription>Update contact details for this warehouse (optional)</CardDescription>
+                <CardDescription>
+                  Update contact details for this warehouse (optional)
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="contact_name">Contact Person Name</Label>
-                  <Input
-                    id="contact_name"
-                    {...register('contact_name')}
-                    placeholder="John Doe"
-                  />
+                  <Input id="contact_name" {...register('contact_name')} placeholder="John Doe" />
                 </div>
 
                 <div className="space-y-2">
@@ -470,27 +440,33 @@ export default function WarehouseEdit() {
                   <CardDescription>Update weekly operating hours (optional)</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(
-                    (day) => (
-                      <div key={day} className="grid grid-cols-3 gap-4 items-center">
-                        <Label className="capitalize">{day}</Label>
-                        <div className="space-y-2">
-                          <Input
-                            type="time"
-                            {...register(`${day}_open` as any)}
-                            placeholder="09:00"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Input
-                            type="time"
-                            {...register(`${day}_close` as any)}
-                            placeholder="18:00"
-                          />
-                        </div>
+                  {[
+                    'monday',
+                    'tuesday',
+                    'wednesday',
+                    'thursday',
+                    'friday',
+                    'saturday',
+                    'sunday',
+                  ].map((day) => (
+                    <div key={day} className="grid grid-cols-3 gap-4 items-center">
+                      <Label className="capitalize">{day}</Label>
+                      <div className="space-y-2">
+                        <Input
+                          type="time"
+                          {...register(`${day}_open` as any)}
+                          placeholder="09:00"
+                        />
                       </div>
-                    )
-                  )}
+                      <div className="space-y-2">
+                        <Input
+                          type="time"
+                          {...register(`${day}_close` as any)}
+                          placeholder="18:00"
+                        />
+                      </div>
+                    </div>
+                  ))}
                 </CardContent>
               </Card>
             </div>

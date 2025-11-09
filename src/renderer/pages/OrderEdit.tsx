@@ -6,13 +6,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Label } from '../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { useToast } from '../hooks/use-toast';
-import { useGetOrderQuery, useUpdateOrderStatusMutation } from '../types/generated';
+import { useGetOrderQuery, useUpdateOrderStatusMutation, OrderStatus as OrderStatusEnum } from '../types/generated';
 import { Skeleton } from '../components/ui/skeleton';
 import { Badge } from '../components/ui/badge';
 import { useCurrency } from '../hooks/useCurrency';
 
 interface OrderStatusFormData {
-  status: string;
+  status: OrderStatusEnum;
 }
 
 export default function OrderEdit() {
@@ -31,7 +31,7 @@ export default function OrderEdit() {
   const { handleSubmit, setValue, watch } = useForm<OrderStatusFormData>({
     values: order
       ? {
-          status: order.status || 'pending',
+          status: order.status || OrderStatusEnum.Draft,
         }
       : undefined,
   });
@@ -156,7 +156,7 @@ export default function OrderEdit() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label className="text-muted-foreground">Order Date</Label>
-                <p>{new Date(order.order_date).toLocaleDateString()}</p>
+                <p>{new Date(order.createdAt).toLocaleDateString()}</p>
               </div>
               <div>
                 <Label className="text-muted-foreground">Currency Used</Label>
@@ -168,7 +168,7 @@ export default function OrderEdit() {
               <div>
                 <Label className="text-muted-foreground">Total Amount</Label>
                 <p className="font-semibold">
-                  {formatDual(order.total_usd || 0, order.total_lbp || 0)}
+                  {formatDual(order.total_usd || 0).usd} / {formatDual(order.total_usd || 0).lbp}
                 </p>
               </div>
               <div>
@@ -228,7 +228,7 @@ export default function OrderEdit() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="status">New Status *</Label>
-                <Select value={watch('status')} onValueChange={(value) => setValue('status', value)}>
+                <Select value={watch('status')} onValueChange={(value) => setValue('status', value as OrderStatusEnum)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>

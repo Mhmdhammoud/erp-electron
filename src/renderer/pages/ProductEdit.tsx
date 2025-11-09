@@ -8,7 +8,7 @@ import { Label } from '../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Textarea } from '../components/ui/textarea';
 import { useToast } from '../hooks/use-toast';
-import { useGetProductQuery, useUpdateProductMutation } from '../types/generated';
+import { useGetProductQuery, useUpdateProductMutation, ProductStatus } from '../types/generated';
 import { Skeleton } from '../components/ui/skeleton';
 
 interface ProductFormData {
@@ -18,7 +18,7 @@ interface ProductFormData {
   price_usd: number;
   quantity_in_stock: number;
   reorder_level: number;
-  status: string;
+  status: ProductStatus;
   barcode?: string;
   description?: string;
 }
@@ -50,7 +50,7 @@ export default function ProductEdit() {
           price_usd: product.price_usd || 0,
           quantity_in_stock: product.quantity_in_stock || 0,
           reorder_level: product.reorder_level || 0,
-          status: product.status || 'active',
+          status: product.status || ProductStatus.Active,
           barcode: product.barcode || '',
           description: product.description || '',
         }
@@ -199,7 +199,7 @@ export default function ProductEdit() {
                 <Label htmlFor="status">Status *</Label>
                 <Select
                   value={watch('status')}
-                  onValueChange={(value) => setValue('status', value)}
+                  onValueChange={(value) => setValue('status', value as ProductStatus)}
                 >
                   <SelectTrigger>
                     <SelectValue />

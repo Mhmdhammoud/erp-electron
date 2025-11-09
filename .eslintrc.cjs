@@ -1,20 +1,45 @@
 module.exports = {
-  root: true,
-  env: { browser: true, es2020: true, node: true },
+  plugins: [
+    '@typescript-eslint/eslint-plugin',
+    'eslint-plugin-tsdoc',
+    'unused-imports',
+    'react-refresh',
+  ],
   extends: [
     'eslint:recommended',
     'plugin:@typescript-eslint/recommended',
     'plugin:react-hooks/recommended',
+    'prettier',
   ],
-  ignorePatterns: ['dist', '.eslintrc.cjs'],
   parser: '@typescript-eslint/parser',
-  plugins: ['react-refresh'],
-  rules: {
-    'react-refresh/only-export-components': [
-      'warn',
-      { allowConstantExport: true },
-    ],
-    '@typescript-eslint/no-explicit-any': 'warn',
-    '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+  parserOptions: {
+    project: './tsconfig.json',
+    tsconfigRootDir: __dirname,
+    ecmaVersion: 2020,
+    sourceType: 'module',
+    ecmaFeatures: {
+      jsx: true,
+    },
   },
-}
+  rules: {
+    'tsdoc/syntax': 'warn',
+    '@typescript-eslint/ban-ts-comment': 'off',
+    '@typescript-eslint/ban-types': 'off',
+    '@typescript-eslint/no-unused-vars': ['warn'],
+    '@typescript-eslint/no-explicit-any': 'off',
+    '@typescript-eslint/no-non-null-assertion': 'off',
+    '@typescript-eslint/no-non-null-asserted-optional-chain': 'off',
+    'unused-imports/no-unused-imports': 'error',
+    'no-async-promise-executor': 'off',
+    'no-console': 'error',
+    'no-mixed-spaces-and-tabs': 'off',
+    'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+  },
+  root: true,
+  env: {
+    browser: true,
+    es2020: true,
+    node: true,
+  },
+  ignorePatterns: ['dist', '.eslintrc.cjs', 'dist-electron', '**/types/generated.ts'],
+};

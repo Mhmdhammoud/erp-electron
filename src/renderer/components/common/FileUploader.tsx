@@ -125,7 +125,7 @@ export const FileUploader = forwardRef<HTMLInputElement, FileUploaderProps>(
       onRemove,
       showPreview = true,
     },
-    ref
+    _ref
   ) => {
     const inputRef = useRef<HTMLInputElement>(null);
     const [dragActive, setDragActive] = useState(false);

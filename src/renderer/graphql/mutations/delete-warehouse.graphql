@@ -1,5 +1,5 @@
-mutation DeleteWarehouse($id: ID!) {
-  deleteWarehouse(id: $id) {
+mutation DeactivateWarehouse($id: ID!) {
+  deactivateWarehouse(id: $id) {
     warehouse {
       _id
     }

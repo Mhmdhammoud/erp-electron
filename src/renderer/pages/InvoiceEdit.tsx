@@ -13,10 +13,12 @@ import { Skeleton } from '../components/ui/skeleton';
 import { Badge } from '../components/ui/badge';
 import { useCurrency } from '../hooks/useCurrency';
 
+import { PaymentMethod as PaymentMethodEnum } from '../types/generated';
+
 interface PaymentFormData {
   amount_usd: number;
   amount_lbp: number;
-  payment_method: string;
+  payment_method: PaymentMethodEnum;
   notes?: string;
 }
 
@@ -24,7 +26,7 @@ export default function InvoiceEdit() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { exchangeRate, formatDual } = useCurrency();
+  const { exchangeRate } = useCurrency();
 
   const { data, loading, refetch } = useGetInvoiceQuery({
     variables: { id: id! },
@@ -43,7 +45,7 @@ export default function InvoiceEdit() {
     defaultValues: {
       amount_usd: 0,
       amount_lbp: 0,
-      payment_method: 'cash',
+      payment_method: PaymentMethodEnum.Cash,
       notes: '',
     },
   });
@@ -63,7 +65,8 @@ export default function InvoiceEdit() {
           input: {
             amount_usd: Number(formData.amount_usd),
             amount_lbp: Number(formData.amount_lbp),
-            payment_method: formData.payment_method,
+            payment_method: formData.payment_method as any,
+            date: new Date().toISOString(),
             notes: formData.notes || undefined,
           },
         },
@@ -84,7 +87,7 @@ export default function InvoiceEdit() {
         // Reset form
         setValue('amount_usd', 0);
         setValue('amount_lbp', 0);
-        setValue('payment_method', 'cash');
+        setValue('payment_method', PaymentMethodEnum.Cash);
         setValue('notes', '');
       }
     } catch (error) {
@@ -313,10 +316,10 @@ export default function InvoiceEdit() {
 
                 <div className="space-y-2">
                   <Label htmlFor="payment_method">Payment Method *</Label>
-                  <Select
-                    value={watch('payment_method')}
-                    onValueChange={(value) => setValue('payment_method', value)}
-                  >
+                    <Select
+                      value={watch('payment_method')}
+                      onValueChange={(value) => setValue('payment_method', value as PaymentMethodEnum)}
+                    >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>

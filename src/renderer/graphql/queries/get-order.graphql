@@ -18,6 +18,8 @@ query GetOrder($id: ID!) {
         subtotal_usd
       }
       notes
+      createdAt
+      updatedAt
     }
     error {
       field

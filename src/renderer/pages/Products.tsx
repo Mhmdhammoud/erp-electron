@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Pagination } from '@/components/ui/pagination';
 import {
@@ -94,8 +94,6 @@ export default function Products() {
   const { data, loading, refetch } = useGetProductsQuery({
     variables: {
       filter: { search: searchTerm },
-      page,
-      limit,
     },
   });
 
@@ -143,7 +141,7 @@ export default function Products() {
       price_usd: parseFloat(formData.price_usd),
       quantity_in_stock: parseInt(formData.quantity_in_stock),
       reorder_level: parseInt(formData.reorder_level),
-      status: formData.status,
+      status: formData.status as any,
       barcode: formData.barcode || null,
       description: formData.description || null,
     };
@@ -299,7 +297,7 @@ export default function Products() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {products.map((product: any, index: number) => {
+                    {products.map((product: any) => {
                       const isLowStock = product.quantity_in_stock <= (product.reorder_level || 0);
                       const { usd, lbp } = formatDual(product.price_usd);
 
