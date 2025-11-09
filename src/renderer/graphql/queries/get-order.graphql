@@ -1,0 +1,29 @@
+query GetOrder($id: ID!) {
+  order(id: $id) {
+    order {
+      _id
+      customer_id
+      order_date
+      status
+      currency_used
+      exchange_rate_used
+      total_usd
+      total_lbp
+      items {
+        product_id
+        product_name
+        product_sku
+        quantity
+        unit_price_usd
+        unit_price_lbp
+        subtotal_usd
+        subtotal_lbp
+      }
+      notes
+    }
+    error {
+      field
+      message
+    }
+  }
+}

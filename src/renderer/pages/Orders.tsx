@@ -366,7 +366,7 @@ export default function Orders() {
                         </Select>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" onClick={() => navigate(`/orders/${order._id}`)}>
                           View Details
                         </Button>
                       </TableCell>

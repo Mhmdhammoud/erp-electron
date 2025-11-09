@@ -17,12 +17,16 @@ import { Component, ErrorInfo, ReactNode, useEffect } from 'react';
 import Dashboard from './pages/Dashboard';
 import Products from './pages/Products';
 import ProductCreate from './pages/ProductCreate';
+import ProductDetail from './pages/ProductDetail';
 import Customers from './pages/Customers';
 import CustomerCreate from './pages/CustomerCreate';
+import CustomerDetail from './pages/CustomerDetail';
 import Orders from './pages/Orders';
 import OrderCreate from './pages/OrderCreate';
+import OrderDetail from './pages/OrderDetail';
 import Invoices from './pages/Invoices';
 import InvoiceCreate from './pages/InvoiceCreate';
+import InvoiceDetail from './pages/InvoiceDetail';
 import Settings from './pages/Settings';
 
 const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
@@ -143,12 +147,16 @@ function App() {
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/products" element={<Products />} />
                     <Route path="/products/new" element={<ProductCreate />} />
+                    <Route path="/products/:id" element={<ProductDetail />} />
                     <Route path="/customers" element={<Customers />} />
                     <Route path="/customers/new" element={<CustomerCreate />} />
+                    <Route path="/customers/:id" element={<CustomerDetail />} />
                     <Route path="/orders" element={<Orders />} />
                     <Route path="/orders/new" element={<OrderCreate />} />
+                    <Route path="/orders/:id" element={<OrderDetail />} />
                     <Route path="/invoices" element={<Invoices />} />
                     <Route path="/invoices/new" element={<InvoiceCreate />} />
+                    <Route path="/invoices/:id" element={<InvoiceDetail />} />
                     <Route path="/settings" element={<Settings />} />
                   </Routes>
                 </Layout>
