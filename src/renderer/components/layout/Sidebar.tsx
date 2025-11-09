@@ -15,6 +15,7 @@ import {
   List,
   BarChart3,
   Warehouse,
+  Truck,
 } from 'lucide-react';
 
 const navigation = [
@@ -71,6 +72,17 @@ const navigation = [
     ]
   },
   {
+    name: 'Fleet',
+    icon: Truck,
+    type: 'group' as const,
+    items: [
+      { name: 'Drivers', href: '/drivers', icon: Users },
+      { name: 'Add Driver', href: '/drivers/new', icon: Plus },
+      { name: 'Vehicles', href: '/vehicles', icon: Truck },
+      { name: 'Add Vehicle', href: '/vehicles/new', icon: Plus },
+    ],
+  },
+  {
     name: 'Settings',
     href: '/settings',
     icon: Settings,
@@ -80,7 +92,14 @@ const navigation = [
 
 export default function Sidebar() {
   const location = useLocation();
-  const [openGroups, setOpenGroups] = useState<string[]>(['Products', 'Customers', 'Orders', 'Invoices', 'Warehouses']);
+  const [openGroups, setOpenGroups] = useState<string[]>([
+    'Products',
+    'Customers',
+    'Orders',
+    'Invoices',
+    'Warehouses',
+    'Fleet',
+  ]);
 
   const toggleGroup = (name: string) => {
     setOpenGroups(prev =>

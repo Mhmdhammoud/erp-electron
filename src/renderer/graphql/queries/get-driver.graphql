@@ -1,0 +1,33 @@
+query GetDriver($id: ID!) {
+  driver(id: $id) {
+    driver {
+      _id
+      driver_code
+      first_name
+      last_name
+      status
+      license {
+        license_number
+        license_class
+        issue_date
+        expiry_date
+      }
+      contact {
+        phone
+        email
+        emergency_contact_name
+        emergency_contact_phone
+      }
+      assigned_vehicle_id
+      notes
+      createdAt
+      updatedAt
+      created_by
+      updated_by
+    }
+    error {
+      field
+      message
+    }
+  }
+}

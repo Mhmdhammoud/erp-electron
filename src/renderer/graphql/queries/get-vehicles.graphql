@@ -1,0 +1,41 @@
+query GetVehicles($filter: VehicleFilterInput) {
+  vehicles(filter: $filter) {
+    vehicles {
+      _id
+      vehicle_code
+      license_plate
+      vehicle_type
+      status
+      make
+      vehicle_model
+      year
+      fuel_type
+      fuel_capacity
+      cargo_capacity
+      maintenance {
+        last_maintenance_date
+        next_maintenance_date
+        maintenance_interval_km
+        current_mileage
+      }
+      insurance {
+        policy_number
+        provider
+        expiry_date
+        coverage_amount
+      }
+      assigned_driver_id
+      home_warehouse_id
+      notes
+      createdAt
+      updatedAt
+    }
+    length
+    page
+    limit
+    error {
+      field
+      message
+    }
+  }
+}
