@@ -32,27 +32,35 @@ This document defines the frontend specifications for the multi-tenant ERP syste
 
 ### Backend Status
 
-**Current Implementation: ~85% Complete**
+**Current Implementation: ~90% Complete**
 
 ✅ **Fully Implemented:**
+
 - Tenant Module (CRUD, exchange rates, branding)
 - Product Module (inventory, categories, search)
 - Customer Module (CRUD, search, addresses)
 - Order Module (status management, inventory integration)
 - Invoice Module (payment tracking, status calculation)
+- **Warehouse Module (multi-warehouse inventory, stock transfers)** ✨ NEW
 - Dashboard Module (metrics, analytics, KPIs)
 - Health Module (system monitoring)
 - Authentication Guards & Decorators
 - Multi-Tenancy Isolation
 - Currency Conversion Service
+- Page-based Pagination (page/limit pattern with countDocuments)
 
 ⚠️ **Partially Implemented:**
+
 - Invoice-Order coupling (needs status update when invoice created)
+- Order-Warehouse integration (warehouse selection for fulfillment)
 
 ❌ **Not Yet Implemented:**
+
 - Webhooks Module (Clerk user.created events)
 - Auth Module (login/me GraphQL queries)
-- Pagination for large datasets
+- Fleet Management (Driver, Vehicle modules) - planned Phase 2
+- Shipment Management - planned Phase 3
+- Batch & Route Optimization - planned Phase 4
 
 ### Frontend Goals
 
@@ -109,35 +117,35 @@ This document defines the frontend specifications for the multi-tenant ERP syste
 
 #### Electron App
 
-| Component | Technology | Purpose |
-|-----------|-----------|---------|
-| **Framework** | Electron 27+ | Desktop app wrapper |
-| **UI Library** | React 18.x | Component-based UI |
-| **Language** | TypeScript 5.x | Type safety |
-| **GraphQL Client** | Apollo Client 3.8+ | API communication |
-| **State Management** | Zustand | Lightweight state |
-| **Styling** | TailwindCSS 3.x | Utility-first CSS |
-| **i18n** | i18next 23.x | Multi-language |
-| **Auth** | @clerk/clerk-react | Clerk integration |
-| **Code Generation** | graphql-codegen | Type-safe queries |
-| **Build Tool** | Vite 5.x | Fast bundler |
-| **Forms** | React Hook Form | Form validation |
-| **Tables** | TanStack Table | Advanced tables |
-| **Charts** | Recharts | Data visualization |
+| Component            | Technology         | Purpose             |
+| -------------------- | ------------------ | ------------------- |
+| **Framework**        | Electron 27+       | Desktop app wrapper |
+| **UI Library**       | React 18.x         | Component-based UI  |
+| **Language**         | TypeScript 5.x     | Type safety         |
+| **GraphQL Client**   | Apollo Client 3.8+ | API communication   |
+| **State Management** | Zustand            | Lightweight state   |
+| **Styling**          | TailwindCSS 3.x    | Utility-first CSS   |
+| **i18n**             | i18next 23.x       | Multi-language      |
+| **Auth**             | @clerk/clerk-react | Clerk integration   |
+| **Code Generation**  | graphql-codegen    | Type-safe queries   |
+| **Build Tool**       | Vite 5.x           | Fast bundler        |
+| **Forms**            | React Hook Form    | Form validation     |
+| **Tables**           | TanStack Table     | Advanced tables     |
+| **Charts**           | Recharts           | Data visualization  |
 
 #### Next.js Admin Dashboard
 
-| Component | Technology | Purpose |
-|-----------|-----------|---------|
-| **Framework** | Next.js 14.x | React SSR framework |
-| **UI Library** | React 18.x | Component-based UI |
-| **Language** | TypeScript 5.x | Type safety |
-| **GraphQL Client** | Apollo Client 3.8+ | API communication |
-| **Styling** | TailwindCSS 3.x | Utility-first CSS |
-| **Auth** | @clerk/nextjs | Clerk SSR integration |
-| **Code Generation** | graphql-codegen | Type-safe queries |
-| **Forms** | React Hook Form | Form validation |
-| **Validation** | Zod | Runtime validation |
+| Component           | Technology         | Purpose               |
+| ------------------- | ------------------ | --------------------- |
+| **Framework**       | Next.js 14.x       | React SSR framework   |
+| **UI Library**      | React 18.x         | Component-based UI    |
+| **Language**        | TypeScript 5.x     | Type safety           |
+| **GraphQL Client**  | Apollo Client 3.8+ | API communication     |
+| **Styling**         | TailwindCSS 3.x    | Utility-first CSS     |
+| **Auth**            | @clerk/nextjs      | Clerk SSR integration |
+| **Code Generation** | graphql-codegen    | Type-safe queries     |
+| **Forms**           | React Hook Form    | Form validation       |
+| **Validation**      | Zod                | Runtime validation    |
 
 ---
 
@@ -186,6 +194,7 @@ This document defines the frontend specifications for the multi-tenant ERP syste
 #### Frontend Auth Implementation
 
 **Electron App:**
+
 ```typescript
 // src/auth/ClerkProvider.tsx
 import { ClerkProvider } from '@clerk/clerk-react';
@@ -230,30 +239,33 @@ const createApolloClient = () => {
 ```
 
 **Next.js Admin:**
+
 ```typescript
 // src/middleware.ts
-import { authMiddleware } from "@clerk/nextjs";
+import { authMiddleware } from '@clerk/nextjs';
 
 export default authMiddleware({
-  publicRoutes: ["/"],
+  publicRoutes: ['/'],
   afterAuth(auth, req) {
     // Verify super admin role
     const role = auth.sessionClaims?.public_metadata?.role;
     if (role !== 'super_admin') {
       return redirectToUnauthorized();
     }
-  }
+  },
 });
 ```
 
 #### Role-Based Access Control
 
 **Roles:**
+
 - `admin`: Full access to their tenant's data
 - `user`: Read-only access to tenant's data (future)
 - `super_admin`: Access to all tenants (admin dashboard only)
 
 **Frontend Implementation:**
+
 ```typescript
 // useAuth hook
 export function useAuth() {
@@ -903,6 +915,228 @@ mutation CancelInvoice($id: ObjectID!) {
 }
 ```
 
+#### **Warehouse Operations** ✨ NEW
+
+```graphql
+# Get all warehouses
+query GetWarehouses($filter: WarehouseFilterInput) {
+  warehouses(filter: $filter) {
+    warehouses {
+      id
+      name
+      code
+      address {
+        street
+        city
+        state
+        postal_code
+        country
+        coordinates {
+          latitude
+          longitude
+        }
+      }
+      contact {
+        name
+        phone
+        email
+      }
+      capacity {
+        total_sqft
+        storage_units
+        max_pallets
+      }
+      operating_hours {
+        monday { open, close }
+        tuesday { open, close }
+        wednesday { open, close }
+        thursday { open, close }
+        friday { open, close }
+        saturday { open, close }
+        sunday { open, close }
+      }
+      status
+      is_primary
+      created_by
+      updated_by
+      createdAt
+      updatedAt
+    }
+    length
+    page
+    limit
+    totalCount
+    error {
+      field
+      message
+    }
+  }
+}
+
+# Get warehouse by ID
+query GetWarehouse($id: ID!) {
+  warehouse(id: $id) {
+    warehouse {
+      # Same fields as above
+    }
+    error {
+      field
+      message
+    }
+  }
+}
+
+# Get warehouse by code
+query GetWarehouseByCode($code: String!) {
+  warehouseByCode(code: $code) {
+    warehouse {
+      # Same fields as above
+    }
+    error {
+      field
+      message
+    }
+  }
+}
+
+# Get primary warehouse
+query GetPrimaryWarehouse {
+  primaryWarehouse {
+    warehouse {
+      # Same fields as above
+    }
+    error {
+      field
+      message
+    }
+  }
+}
+
+# Get warehouse inventory
+query GetWarehouseInventory($warehouseId: ID!, $page: Int, $limit: Int) {
+  warehouseInventory(warehouseId: $warehouseId, page: $page, limit: $limit) {
+    inventories {
+      id
+      warehouse_id
+      product_id
+      quantity
+      reserved_quantity
+      available_quantity
+      location
+      last_restocked_at
+      createdAt
+      updatedAt
+    }
+    length
+    page
+    limit
+    totalCount
+    error {
+      field
+      message
+    }
+  }
+}
+
+# Get inventory by product (across all warehouses)
+query GetInventoryByProduct($productId: ID!) {
+  inventoryByProduct(productId: $productId) {
+    inventories {
+      id
+      warehouse_id
+      product_id
+      quantity
+      reserved_quantity
+      available_quantity
+      location
+    }
+    length
+    totalCount
+    error {
+      field
+      message
+    }
+  }
+}
+
+# Create warehouse
+mutation CreateWarehouse($input: CreateWarehouseInput!) {
+  createWarehouse(input: $input) {
+    warehouse {
+      id
+      name
+      code
+    }
+    error {
+      field
+      message
+    }
+  }
+}
+
+# Update warehouse
+mutation UpdateWarehouse($id: ID!, $input: UpdateWarehouseInput!) {
+  updateWarehouse(id: $id, input: $input) {
+    warehouse {
+      id
+      name
+      code
+    }
+    error {
+      field
+      message
+    }
+  }
+}
+
+# Deactivate warehouse
+mutation DeactivateWarehouse($id: ID!) {
+  deactivateWarehouse(id: $id) {
+    warehouse {
+      id
+      status
+    }
+    error {
+      field
+      message
+    }
+  }
+}
+
+# Update warehouse inventory
+mutation UpdateWarehouseInventory($input: UpdateInventoryInput!) {
+  updateWarehouseInventory(input: $input) {
+    inventory {
+      id
+      warehouse_id
+      product_id
+      quantity
+      available_quantity
+    }
+    error {
+      field
+      message
+    }
+  }
+}
+
+# Transfer stock between warehouses
+mutation TransferStock($input: TransferStockInput!) {
+  transferStock(input: $input) {
+    inventory {
+      id
+      warehouse_id
+      product_id
+      quantity
+    }
+    error {
+      field
+      message
+    }
+  }
+}
+```
+
 #### **Dashboard Operations**
 
 ```graphql
@@ -972,6 +1206,7 @@ query HealthCheck {
 ### Input Types
 
 #### CreateTenantInput
+
 ```typescript
 interface CreateTenantInput {
   name: string;
@@ -984,6 +1219,7 @@ interface CreateTenantInput {
 ```
 
 #### UpdateTenantInput
+
 ```typescript
 interface UpdateTenantInput {
   name?: string;
@@ -1005,6 +1241,7 @@ interface UpdateTenantInput {
 ```
 
 #### CreateProductInput
+
 ```typescript
 interface CreateProductInput {
   sku: string;
@@ -1021,6 +1258,7 @@ interface CreateProductInput {
 ```
 
 #### UpdateProductInput
+
 ```typescript
 interface UpdateProductInput {
   sku?: string;
@@ -1038,6 +1276,7 @@ interface UpdateProductInput {
 ```
 
 #### ProductFilterInput
+
 ```typescript
 interface ProductFilterInput {
   category?: string;
@@ -1047,6 +1286,7 @@ interface ProductFilterInput {
 ```
 
 #### CreateCustomerInput
+
 ```typescript
 interface CreateCustomerInput {
   name: string;
@@ -1069,6 +1309,7 @@ interface AddressInput {
 ```
 
 #### UpdateCustomerInput
+
 ```typescript
 interface UpdateCustomerInput {
   name?: string;
@@ -1083,6 +1324,7 @@ interface UpdateCustomerInput {
 ```
 
 #### CreateOrderInput
+
 ```typescript
 interface CreateOrderInput {
   customer_id: string; // ObjectID
@@ -1101,6 +1343,7 @@ interface OrderItemInput {
 ```
 
 #### UpdateOrderStatusInput
+
 ```typescript
 interface UpdateOrderStatusInput {
   status: OrderStatus;
@@ -1108,6 +1351,7 @@ interface UpdateOrderStatusInput {
 ```
 
 #### CreateInvoiceInput
+
 ```typescript
 interface CreateInvoiceInput {
   order_id: string; // ObjectID
@@ -1119,6 +1363,7 @@ interface CreateInvoiceInput {
 ```
 
 #### RecordPaymentInput
+
 ```typescript
 interface RecordPaymentInput {
   amount_usd: number;
@@ -1126,6 +1371,106 @@ interface RecordPaymentInput {
   payment_method: PaymentMethod;
   date?: Date; // Default: now
   notes?: string;
+}
+```
+
+#### CreateWarehouseInput ✨ NEW
+
+```typescript
+interface CreateWarehouseInput {
+  name: string;
+  code: string; // Unique warehouse code
+  address: WarehouseAddressInput;
+  contact?: WarehouseContactInput;
+  capacity?: WarehouseCapacityInput;
+  operating_hours?: OperatingHoursInput;
+  is_primary?: boolean; // Default: false
+}
+
+interface WarehouseAddressInput {
+  street: string;
+  city: string;
+  state?: string;
+  postal_code?: string;
+  country: string;
+  coordinates?: {
+    latitude: number;
+    longitude: number;
+  };
+}
+
+interface WarehouseContactInput {
+  name?: string;
+  phone?: string;
+  email?: string;
+}
+
+interface WarehouseCapacityInput {
+  total_sqft?: number;
+  storage_units?: number;
+  max_pallets?: number;
+}
+
+interface OperatingHoursInput {
+  monday?: { open: string; close: string };
+  tuesday?: { open: string; close: string };
+  wednesday?: { open: string; close: string };
+  thursday?: { open: string; close: string };
+  friday?: { open: string; close: string };
+  saturday?: { open: string; close: string };
+  sunday?: { open: string; close: string };
+}
+```
+
+#### UpdateWarehouseInput ✨ NEW
+
+```typescript
+interface UpdateWarehouseInput {
+  name?: string;
+  code?: string;
+  address?: WarehouseAddressInput;
+  contact?: WarehouseContactInput;
+  capacity?: WarehouseCapacityInput;
+  operating_hours?: OperatingHoursInput;
+  status?: WarehouseStatus;
+  is_primary?: boolean;
+}
+```
+
+#### WarehouseFilterInput ✨ NEW
+
+```typescript
+interface WarehouseFilterInput {
+  status?: WarehouseStatus;
+  search?: string; // Searches name, code, city
+  city?: string;
+  country?: string;
+  is_primary?: boolean;
+  page?: number; // Default: 1
+  limit?: number; // Default: 20
+}
+```
+
+#### UpdateInventoryInput ✨ NEW
+
+```typescript
+interface UpdateInventoryInput {
+  warehouse_id: string; // ObjectID
+  product_id: string; // ObjectID
+  quantity: number; // Total quantity in warehouse
+  location?: string; // e.g., "Aisle 5, Shelf B"
+}
+```
+
+#### TransferStockInput ✨ NEW
+
+```typescript
+interface TransferStockInput {
+  from_warehouse_id: string; // ObjectID
+  to_warehouse_id: string; // ObjectID
+  product_id: string; // ObjectID
+  quantity: number; // Amount to transfer
+  notes?: string; // Transfer reason/notes
 }
 ```
 
@@ -1188,6 +1533,62 @@ enum TenantStatus {
   INACTIVE = 'inactive',
   SUSPENDED = 'suspended',
 }
+
+enum WarehouseStatus {
+  ACTIVE = 'active',
+  INACTIVE = 'inactive',
+  MAINTENANCE = 'maintenance',
+  CLOSED = 'closed',
+}
+
+enum DriverStatus {
+  AVAILABLE = 'available',
+  ON_DELIVERY = 'on_delivery',
+  OFF_DUTY = 'off_duty',
+  ON_LEAVE = 'on_leave',
+  INACTIVE = 'inactive',
+}
+
+enum VehicleType {
+  TRUCK = 'truck',
+  VAN = 'van',
+  MOTORCYCLE = 'motorcycle',
+  CAR = 'car',
+}
+
+enum VehicleStatus {
+  AVAILABLE = 'available',
+  IN_USE = 'in_use',
+  MAINTENANCE = 'maintenance',
+  RETIRED = 'retired',
+}
+
+enum ShipmentStatus {
+  PENDING = 'pending',
+  PREPARING = 'preparing',
+  READY = 'ready',
+  LOADED = 'loaded',
+  IN_TRANSIT = 'in_transit',
+  OUT_FOR_DELIVERY = 'out_for_delivery',
+  DELIVERED = 'delivered',
+  FAILED = 'failed',
+  CANCELLED = 'cancelled',
+}
+
+enum BatchStatus {
+  PLANNED = 'planned',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+  PARTIALLY_COMPLETED = 'partially_completed',
+  CANCELLED = 'cancelled',
+}
+
+enum ShipmentPriority {
+  LOW = 'low',
+  NORMAL = 'normal',
+  HIGH = 'high',
+  URGENT = 'urgent',
+}
 ```
 
 ---
@@ -1203,7 +1604,7 @@ enum TenantStatus {
 ```typescript
 // ❌ WRONG - Don't pass tenant_id
 const { data } = useQuery(GET_PRODUCTS, {
-  variables: { tenantId: user.tenantId }
+  variables: { tenantId: user.tenantId },
 });
 
 // ✅ CORRECT - Backend extracts tenant from JWT
@@ -1385,6 +1786,7 @@ function ProductsPage() {
 #### 1. Dashboard Page
 
 **Layout:**
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │ Header: Logo | Business Name | User Menu | Settings    │
@@ -1392,16 +1794,17 @@ function ProductsPage() {
 │ Sidebar Navigation                      Main Content    │
 │ - Dashboard                                             │
 │ - Products                    ┌──────────────────────┐  │
-│ - Customers                   │  Revenue Metrics     │  │
-│ - Orders                      │  Today: $1,234       │  │
-│ - Invoices                    │  This Week: $5,678   │  │
-│                               │  This Month: $12,345 │  │
+│ - Warehouses ✨ NEW            │  Revenue Metrics     │  │
+│ - Customers                   │  Today: $1,234       │  │
+│ - Orders                      │  This Week: $5,678   │  │
+│ - Invoices                    │  This Month: $12,345 │  │
 │                               └──────────────────────┘  │
 │                                                         │
 │                               ┌──────────────────────┐  │
 │                               │  Quick Stats         │  │
 │                               │  - Orders: 45        │  │
 │                               │  - Customers: 120    │  │
+│                               │  - Warehouses: 3     │  │
 │                               │  - Low Stock: 5      │  │
 │                               └──────────────────────┘  │
 │                                                         │
@@ -1413,6 +1816,7 @@ function ProductsPage() {
 ```
 
 **Data to Display:**
+
 - Revenue metrics (today, week, month)
 - Order counts by status (draft, confirmed, shipped, invoiced)
 - Invoice counts by status (unpaid, partial, paid, overdue)
@@ -1421,6 +1825,7 @@ function ProductsPage() {
 - Recent orders table
 
 **GraphQL Query:**
+
 ```graphql
 query DashboardData {
   dashboardMetrics {
@@ -1460,6 +1865,7 @@ query DashboardData {
 #### 2. Products Page
 
 **Features:**
+
 - Product list table with search/filter
 - Add/Edit product modal
 - Delete product confirmation
@@ -1468,6 +1874,7 @@ query DashboardData {
 - Barcode scanner support (Electron only)
 
 **Table Columns:**
+
 - SKU
 - Name
 - Category
@@ -1477,11 +1884,13 @@ query DashboardData {
 - Actions (Edit, Delete)
 
 **Filters:**
+
 - Category dropdown
 - Status dropdown (Active, Inactive, Discontinued)
 - Search (name, SKU, barcode)
 
 **GraphQL Queries:**
+
 ```graphql
 query Products($filter: ProductFilterInput) {
   products(filter: $filter) {
@@ -1509,12 +1918,14 @@ query Products($filter: ProductFilterInput) {
 #### 3. Customers Page
 
 **Features:**
+
 - Customer list with search
 - Add/Edit customer modal
 - View customer details (orders, invoices)
 - Credit limit tracking
 
 **Table Columns:**
+
 - Name
 - Email
 - Phone
@@ -1524,6 +1935,7 @@ query Products($filter: ProductFilterInput) {
 - Actions
 
 **GraphQL Queries:**
+
 ```graphql
 query Customers {
   customers {
@@ -1564,6 +1976,7 @@ query CustomerDetails($id: ObjectID!) {
 #### 4. Orders Page
 
 **Features:**
+
 - Order list with status filters
 - Create order wizard (multi-step)
 - Order details view
@@ -1572,6 +1985,7 @@ query CustomerDetails($id: ObjectID!) {
 - Cancel order
 
 **Create Order Wizard Steps:**
+
 1. Select Customer
 2. Add Products (search, select, quantity)
 3. Review & Calculate Total
@@ -1580,6 +1994,7 @@ query CustomerDetails($id: ObjectID!) {
 6. Submit
 
 **Status Workflow:**
+
 ```
 Draft → Confirmed → Shipped → Invoiced
          ↓
@@ -1587,6 +2002,7 @@ Draft → Confirmed → Shipped → Invoiced
 ```
 
 **Table Columns:**
+
 - Order Number
 - Customer Name
 - Total (USD/LBP)
@@ -1595,6 +2011,7 @@ Draft → Confirmed → Shipped → Invoiced
 - Actions
 
 **GraphQL Queries:**
+
 ```graphql
 query Orders($status: OrderStatus) {
   orders(status: $status) {
@@ -1632,6 +2049,7 @@ mutation UpdateOrderStatus($id: ObjectID!, $input: UpdateOrderStatusInput!) {
 #### 5. Invoices Page
 
 **Features:**
+
 - Invoice list with status filters
 - Create invoice from order
 - Record payment (supports partial payments)
@@ -1640,6 +2058,7 @@ mutation UpdateOrderStatus($id: ObjectID!, $input: UpdateOrderStatusInput!) {
 - Overdue invoice alerts
 
 **Table Columns:**
+
 - Invoice Number
 - Customer Name
 - Total Amount
@@ -1650,6 +2069,7 @@ mutation UpdateOrderStatus($id: ObjectID!, $input: UpdateOrderStatusInput!) {
 - Actions
 
 **Payment Recording:**
+
 - Modal with payment amount input
 - Payment method selection
 - Date picker
@@ -1657,6 +2077,7 @@ mutation UpdateOrderStatus($id: ObjectID!, $input: UpdateOrderStatusInput!) {
 - Shows remaining amount after payment
 
 **GraphQL Queries:**
+
 ```graphql
 query Invoices($status: PaymentStatus) {
   invoices(status: $status) {
@@ -1698,6 +2119,7 @@ mutation RecordPayment($id: ObjectID!, $input: RecordPaymentInput!) {
 #### 6. Settings Page
 
 **Tabs:**
+
 - **Business Information**: Edit tenant details
 - **Branding**: Logo, colors, invoice footer
 - **Currency**: Update exchange rate
@@ -1705,6 +2127,7 @@ mutation RecordPayment($id: ObjectID!, $input: RecordPaymentInput!) {
 - **Preferences**: Language, timezone
 
 **GraphQL Queries:**
+
 ```graphql
 query Settings {
   myTenant {
@@ -1746,6 +2169,286 @@ mutation UpdateExchangeRate($rate: Float!) {
 }
 ```
 
+#### 7. Warehouses Page ✨ NEW
+
+**Features:**
+
+- Warehouse list with filters (status, location)
+- Add/Edit warehouse modal with multi-step form
+- View warehouse details (capacity, operating hours, inventory)
+- Set/change primary warehouse
+- Deactivate warehouse
+- View inventory distribution across warehouses
+- Transfer stock between warehouses
+
+**Layout:**
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ Warehouses                              [+ Add Warehouse]│
+├─────────────────────────────────────────────────────────┤
+│ Filters: [Status ▼] [City ▼] [Search...]               │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│ ┌─────────────────────────────────────────────────────┐│
+│ │ Warehouse Cards (Grid View)                         ││
+│ │                                                      ││
+│ │ ┌──────────────┐  ┌──────────────┐  ┌─────────────┐││
+│ │ │ Main Warehouse│  │ Downtown Hub │  │ North Branch│││
+│ │ │ ⭐ PRIMARY     │  │ ACTIVE       │  │ ACTIVE      │││
+│ │ │ NYC, NY       │  │ LA, CA       │  │ CHI, IL     │││
+│ │ │ Code: WH-001  │  │ Code: WH-002 │  │ Code: WH-003│││
+│ │ │ 50 Products   │  │ 32 Products  │  │ 28 Products │││
+│ │ │ [View Details]│  │ [View Details]│ │ [View]      │││
+│ │ └──────────────┘  └──────────────┘  └─────────────┘││
+│ └─────────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────┘
+```
+
+**Table Columns (List View):**
+
+- Name
+- Code
+- City, State
+- Status
+- Is Primary
+- Total Inventory Items
+- Capacity (% filled)
+- Actions (View, Edit, Deactivate)
+
+**Warehouse Details View:**
+
+- **Overview Tab:**
+  - Address with map (if coordinates provided)
+  - Contact information
+  - Capacity metrics (total sqft, storage units, pallets)
+  - Operating hours calendar view
+  - Status badge
+  - Primary warehouse indicator
+
+- **Inventory Tab:**
+  - Product list in this warehouse
+  - Quantity, reserved, available columns
+  - Location within warehouse
+  - Low stock alerts
+  - Last restocked date
+  - Quick actions: Update Quantity, Transfer Stock
+
+- **Activity Tab:** (future)
+  - Stock transfers history
+  - Inventory adjustments
+  - Orders fulfilled from this warehouse
+
+**Create Warehouse Form:**
+
+1. **Basic Information:**
+   - Warehouse Name
+   - Unique Code (auto-generated option)
+   - Set as Primary checkbox
+
+2. **Address:**
+   - Street Address
+   - City, State, ZIP
+   - Country
+   - Coordinates (optional, for map integration)
+
+3. **Contact:**
+   - Contact Person Name (optional)
+   - Phone Number
+   - Email Address
+
+4. **Capacity & Hours:**
+   - Total Square Footage
+   - Storage Units
+   - Max Pallets
+   - Operating Hours (expandable schedule)
+
+**Transfer Stock Modal:**
+
+```
+┌─────────────────────────────────────────────┐
+│ Transfer Stock                              │
+├─────────────────────────────────────────────┤
+│ Product:     [Search/Select Product ▼]      │
+│                                             │
+│ From:        [Main Warehouse    ▼]          │
+│              Available: 150 units           │
+│                                             │
+│ To:          [Downtown Hub      ▼]          │
+│              Current: 50 units              │
+│                                             │
+│ Quantity:    [50]                           │
+│                                             │
+│ Notes:       [Restocking for high demand]   │
+│              (optional)                     │
+│                                             │
+│         [Cancel]  [Transfer Stock]          │
+└─────────────────────────────────────────────┘
+```
+
+**GraphQL Queries:**
+
+```graphql
+query Warehouses($filter: WarehouseFilterInput) {
+  warehouses(filter: $filter) {
+    warehouses {
+      id
+      name
+      code
+      address {
+        city
+        state
+        country
+      }
+      status
+      is_primary
+      createdAt
+    }
+    length
+    page
+    limit
+    totalCount
+  }
+}
+
+query WarehouseDetails($id: ID!) {
+  warehouse(id: $id) {
+    warehouse {
+      id
+      name
+      code
+      address {
+        street
+        city
+        state
+        postal_code
+        country
+        coordinates {
+          latitude
+          longitude
+        }
+      }
+      contact {
+        name
+        phone
+        email
+      }
+      capacity {
+        total_sqft
+        storage_units
+        max_pallets
+      }
+      operating_hours {
+        monday {
+          open
+          close
+        }
+        tuesday {
+          open
+          close
+        }
+        wednesday {
+          open
+          close
+        }
+        thursday {
+          open
+          close
+        }
+        friday {
+          open
+          close
+        }
+        saturday {
+          open
+          close
+        }
+        sunday {
+          open
+          close
+        }
+      }
+      status
+      is_primary
+    }
+  }
+
+  warehouseInventory(warehouseId: $id, page: 1, limit: 100) {
+    inventories {
+      id
+      product_id
+      quantity
+      reserved_quantity
+      available_quantity
+      location
+      last_restocked_at
+    }
+    totalCount
+  }
+}
+
+mutation CreateWarehouse($input: CreateWarehouseInput!) {
+  createWarehouse(input: $input) {
+    warehouse {
+      id
+      name
+      code
+    }
+  }
+}
+
+mutation UpdateWarehouse($id: ID!, $input: UpdateWarehouseInput!) {
+  updateWarehouse(id: $id, input: $input) {
+    warehouse {
+      id
+      name
+    }
+  }
+}
+
+mutation DeactivateWarehouse($id: ID!) {
+  deactivateWarehouse(id: $id) {
+    warehouse {
+      id
+      status
+    }
+  }
+}
+
+mutation TransferStock($input: TransferStockInput!) {
+  transferStock(input: $input) {
+    inventory {
+      id
+      warehouse_id
+      product_id
+      quantity
+    }
+  }
+}
+```
+
+**Product Details Integration:**
+
+When viewing a product, show inventory distribution across all warehouses:
+
+```
+Product: Widget Pro (SKU-12345)
+Price: $29.99 USD
+
+Inventory Distribution:
+┌─────────────────────────────────────────────┐
+│ Warehouse       │ Qty │ Reserved │ Available│
+├─────────────────┼─────┼──────────┼──────────┤
+│ Main Warehouse  │ 150 │    20    │   130    │
+│ Downtown Hub    │  75 │    15    │    60    │
+│ North Branch    │  50 │     5    │    45    │
+├─────────────────┼─────┼──────────┼──────────┤
+│ Total           │ 275 │    40    │   235    │
+└─────────────────────────────────────────────┘
+
+[Transfer Stock Between Warehouses]
+```
+
 ---
 
 ### Next.js Admin Dashboard (Super Admin)
@@ -1753,6 +2456,7 @@ mutation UpdateExchangeRate($rate: Float!) {
 #### 1. Tenants Overview
 
 **Features:**
+
 - List all tenants
 - View tenant details
 - Create new tenant
@@ -1760,6 +2464,7 @@ mutation UpdateExchangeRate($rate: Float!) {
 - View tenant metrics
 
 **Table Columns:**
+
 - Name
 - Owner Email
 - Created Date
@@ -1772,6 +2477,7 @@ mutation UpdateExchangeRate($rate: Float!) {
 #### 2. Tenant Details
 
 **Tabs:**
+
 - Overview (metrics)
 - Users
 - Products
@@ -1809,6 +2515,14 @@ electron-app/
 │   │   │   │   ├── ProductList.tsx
 │   │   │   │   ├── ProductForm.tsx
 │   │   │   │   └── ProductDetails.tsx
+│   │   │   ├── warehouses/ ✨ NEW
+│   │   │   │   ├── WarehouseList.tsx
+│   │   │   │   ├── WarehouseCard.tsx
+│   │   │   │   ├── WarehouseForm.tsx
+│   │   │   │   ├── WarehouseDetails.tsx
+│   │   │   │   ├── InventoryTable.tsx
+│   │   │   │   ├── TransferStockModal.tsx
+│   │   │   │   └── InventoryDistribution.tsx
 │   │   │   ├── customers/
 │   │   │   ├── orders/
 │   │   │   ├── invoices/
@@ -1817,6 +2531,7 @@ electron-app/
 │   │   ├── pages/
 │   │   │   ├── Dashboard.tsx
 │   │   │   ├── Products.tsx
+│   │   │   ├── Warehouses.tsx ✨ NEW
 │   │   │   ├── Customers.tsx
 │   │   │   ├── Orders.tsx
 │   │   │   ├── Invoices.tsx
@@ -1825,12 +2540,14 @@ electron-app/
 │   │   ├── graphql/
 │   │   │   ├── queries/
 │   │   │   │   ├── products.ts
+│   │   │   │   ├── warehouses.ts ✨ NEW
 │   │   │   │   ├── customers.ts
 │   │   │   │   ├── orders.ts
 │   │   │   │   ├── invoices.ts
 │   │   │   │   └── dashboard.ts
 │   │   │   ├── mutations/
 │   │   │   │   ├── products.ts
+│   │   │   │   ├── warehouses.ts ✨ NEW
 │   │   │   │   ├── customers.ts
 │   │   │   │   ├── orders.ts
 │   │   │   │   └── invoices.ts
@@ -1840,12 +2557,14 @@ electron-app/
 │   │   │   ├── useAuth.ts
 │   │   │   ├── useTenant.ts
 │   │   │   ├── useCurrency.ts
-│   │   │   └── useProducts.ts
+│   │   │   ├── useProducts.ts
+│   │   │   └── useWarehouses.ts ✨ NEW
 │   │   │
 │   │   ├── store/
 │   │   │   ├── authStore.ts       # Zustand store
 │   │   │   ├── cartStore.ts       # Order creation state
-│   │   │   └── settingsStore.ts
+│   │   │   ├── settingsStore.ts
+│   │   │   └── warehouseStore.ts ✨ NEW  # Warehouse state
 │   │   │
 │   │   ├── utils/
 │   │   │   ├── formatters.ts
@@ -1926,6 +2645,7 @@ admin-dashboard/
 ### Zustand Stores
 
 #### Auth Store
+
 ```typescript
 // store/authStore.ts
 import create from 'zustand';
@@ -1948,6 +2668,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 ```
 
 #### Cart Store (for Order Creation)
+
 ```typescript
 // store/cartStore.ts
 import create from 'zustand';
@@ -1980,35 +2701,35 @@ export const useCartStore = create<CartState>((set, get) => ({
   currency: 'USD',
   notes: '',
 
-  addItem: (item) => set((state) => ({
-    items: [...state.items, item]
-  })),
+  addItem: (item) =>
+    set((state) => ({
+      items: [...state.items, item],
+    })),
 
-  removeItem: (product_id) => set((state) => ({
-    items: state.items.filter(i => i.product_id !== product_id)
-  })),
+  removeItem: (product_id) =>
+    set((state) => ({
+      items: state.items.filter((i) => i.product_id !== product_id),
+    })),
 
-  updateQuantity: (product_id, quantity) => set((state) => ({
-    items: state.items.map(i =>
-      i.product_id === product_id ? { ...i, quantity } : i
-    )
-  })),
+  updateQuantity: (product_id, quantity) =>
+    set((state) => ({
+      items: state.items.map((i) => (i.product_id === product_id ? { ...i, quantity } : i)),
+    })),
 
   setCustomer: (customer_id) => set({ customer_id }),
 
   setCurrency: (currency) => set({ currency }),
 
-  clear: () => set({
-    customer_id: null,
-    items: [],
-    currency: 'USD',
-    notes: '',
-  }),
+  clear: () =>
+    set({
+      customer_id: null,
+      items: [],
+      currency: 'USD',
+      notes: '',
+    }),
 
   getTotal: () => {
-    return get().items.reduce((sum, item) =>
-      sum + (item.quantity * item.unit_price_usd), 0
-    );
+    return get().items.reduce((sum, item) => sum + item.quantity * item.unit_price_usd, 0);
   },
 }));
 ```
@@ -2036,6 +2757,7 @@ generates:
 ```
 
 **Usage:**
+
 ```bash
 npm run codegen
 ```
@@ -2145,20 +2867,56 @@ const client = new ApolloClient({
 2. **Multi-Tenancy**: Backend handles tenant isolation, frontend doesn't pass tenant_id
 3. **Currency**: All prices stored in USD, display both USD/LBP using tenant's exchange rate
 4. **GraphQL**: Use provided queries/mutations, all return `{ data, error }` pattern
-5. **Enums**: Use centralized enums for status fields
+5. **Enums**: Use centralized enums for status fields (including new warehouse enums)
 6. **Validation**: Backend validates all inputs, frontend shows errors
 7. **Business Logic**: Order status workflow, inventory deduction, payment tracking all handled by backend
+8. **Warehouses** ✨ NEW: Multi-warehouse inventory tracking, stock transfers, primary warehouse management
+9. **Pagination** ✨ NEW: Page-based pagination (page/limit) with totalCount in all list responses
+
+### New Features - Warehouse Management ✨
+
+**What's Available:**
+
+- ✅ Complete warehouse CRUD operations
+- ✅ Multi-warehouse inventory tracking per product
+- ✅ Stock transfer functionality between warehouses
+- ✅ Primary warehouse designation
+- ✅ Reserved vs available quantity tracking
+- ✅ Warehouse capacity and operating hours management
+- ✅ Location tracking within warehouses
+- ✅ Inventory distribution views across all warehouses
+
+**Frontend Can Build:**
+
+1. Warehouse management dashboard (list, create, edit, view details)
+2. Warehouse details page with inventory tab
+3. Stock transfer interface between warehouses
+4. Product details showing inventory distribution across warehouses
+5. Warehouse selection during order fulfillment (future enhancement)
 
 ### Missing Backend Features (To Implement Later)
 
 1. Webhooks Module (Clerk user.created)
 2. Auth Module (login/me queries)
-3. Pagination support
-4. Order-Invoice status coupling
+3. Order-Invoice status coupling
+4. Order-Warehouse integration (warehouse selection for fulfillment)
+5. Fleet Management (Driver, Vehicle modules) - Phase 2
+6. Shipment Management - Phase 3
+7. Batch & Route Optimization - Phase 4
 
 ### Ready to Build
 
-The backend is production-ready for MVP development. Frontend can start building all CRUD interfaces, order creation wizards, invoice management, and dashboard visualizations using the documented GraphQL API.
+The backend is production-ready for MVP development with **warehouse management capabilities**. Frontend can start building:
+
+- All CRUD interfaces (products, customers, orders, invoices, **warehouses**)
+- Order creation wizards
+- Invoice management with payment tracking
+- **Multi-warehouse inventory management** ✨ NEW
+- **Stock transfer workflows** ✨ NEW
+- Dashboard visualizations with warehouse metrics
+- Inventory distribution views
+
+All features use the documented GraphQL API with consistent `{ data, error }` response patterns and page-based pagination.
 
 ---
 
