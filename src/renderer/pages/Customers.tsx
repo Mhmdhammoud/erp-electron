@@ -33,7 +33,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Plus, Search, Edit, Trash, MapPin, Mail, Phone } from 'lucide-react';
+import { Plus, Search, Edit, Trash, MapPin, Mail, Phone, Download } from 'lucide-react';
 import {
   useGetCustomersQuery,
   useSearchCustomersQuery,
@@ -261,6 +261,55 @@ export default function Customers() {
     setIsDeleteDialogOpen(true);
   };
 
+  const handleExportCSV = () => {
+    if (customers.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'No Data',
+        description: 'There are no customers to export',
+      });
+      return;
+    }
+
+    // CSV headers
+    const headers = ['Name', 'Email', 'Phone', 'City', 'Country', 'Notes'];
+
+    // CSV rows
+    const rows = customers.map((customer: any) => {
+      const address = customer.addresses?.[0];
+      return [
+        customer.name || '',
+        customer.email || '',
+        customer.phone || '',
+        address?.city || '',
+        address?.country || '',
+        customer.notes || '',
+      ];
+    });
+
+    // Combine headers and rows
+    const csvContent = [
+      headers.join(','),
+      ...rows.map((row: any[]) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
+    ].join('\n');
+
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `customers-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: 'Success',
+      description: `Exported ${customers.length} customers to CSV`,
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="mb-8">
@@ -270,7 +319,7 @@ export default function Customers() {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             <div className="flex-1 max-w-md relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -281,10 +330,16 @@ export default function Customers() {
                 className="pl-10"
               />
             </div>
-            <Button onClick={() => navigate('/customers/new')}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Customer
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={handleExportCSV} disabled={customers.length === 0}>
+                <Download className="w-4 h-4 mr-2" />
+                Export CSV
+              </Button>
+              <Button onClick={() => navigate('/customers/new')}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Customer
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
