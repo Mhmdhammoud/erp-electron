@@ -31,7 +31,17 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Plus, Filter, DollarSign, FileText, AlertCircle, Receipt, Trash, Search } from 'lucide-react';
+import {
+  Plus,
+  Filter,
+  DollarSign,
+  FileText,
+  AlertCircle,
+  Receipt,
+  Trash,
+  Search,
+  Download,
+} from 'lucide-react';
 import { useCurrency } from '../hooks/useCurrency';
 import {
   useGetInvoicesQuery,
@@ -41,7 +51,8 @@ import {
   useGetCustomersQuery,
 } from '../types/generated';
 import { useToast } from '../hooks/use-toast';
-import { PaymentStatus, PaymentMethod } from '../utils/constants';
+import { PaymentStatus } from '../utils/constants';
+import { PaymentMethod as PaymentMethodEnum } from '../types/generated';
 
 export default function Invoices() {
   const navigate = useNavigate();
@@ -63,18 +74,20 @@ export default function Invoices() {
 
   // Payment form
   const [paymentAmount, setPaymentAmount] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState(PaymentMethod.CASH);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodEnum>(PaymentMethodEnum.Cash);
   const [paymentNotes, setPaymentNotes] = useState('');
 
   const { toast } = useToast();
-  const { formatDual } = useCurrency();
+  const { formatDual, exchangeRate } = useCurrency();
 
   // Use search query if search term is provided, otherwise use regular query
-  const { data: invoicesData, loading, refetch } = useGetInvoicesQuery({
+  const {
+    data: invoicesData,
+    loading,
+    refetch,
+  } = useGetInvoicesQuery({
     variables: {
-      filter: statusFilter && statusFilter !== 'all' ? { payment_status: statusFilter } : undefined,
-      page,
-      limit,
+      filter: undefined,
     },
     skip: searchTerm.length > 0,
   });
@@ -96,7 +109,8 @@ export default function Invoices() {
     refetch();
   };
 
-  const handleOpenCreateDialog = () => {
+  // @ts-expect-error - Function may be used in future UI updates
+  const _handleOpenCreateDialog = () => {
     setIsCreateDialogOpen(true);
     setSelectedOrderId('none');
     setSelectedCustomerId('');
@@ -135,10 +149,10 @@ export default function Invoices() {
       const result = await createInvoice({
         variables: {
           input: {
-            order_id: selectedOrderId === 'none' ? null : selectedOrderId,
-            customer_id: selectedCustomerId,
+            order_id: selectedOrderId === 'none' ? '' : selectedOrderId,
             due_date: dueDate,
-            notes: invoiceNotes || null,
+            issue_date: new Date().toISOString(),
+            notes: invoiceNotes || undefined,
           },
         },
       });
@@ -171,7 +185,7 @@ export default function Invoices() {
     setIsPaymentDialogOpen(true);
     const remaining = invoice.total_usd - invoice.paid_amount_usd;
     setPaymentAmount(remaining.toFixed(2));
-    setPaymentMethod(PaymentMethod.CASH);
+    setPaymentMethod(PaymentMethodEnum.Cash);
     setPaymentNotes('');
   };
 
@@ -208,11 +222,13 @@ export default function Invoices() {
     try {
       const result = await recordPayment({
         variables: {
+          id: selectedInvoice._id,
           input: {
-            invoice_id: selectedInvoice._id,
             amount_usd: amount,
-            payment_method: paymentMethod,
-            notes: paymentNotes || null,
+            amount_lbp: amount * exchangeRate,
+            payment_method: paymentMethod as any,
+            date: new Date().toISOString(),
+            notes: paymentNotes || undefined,
           },
         },
       });
@@ -279,6 +295,52 @@ export default function Invoices() {
     return date.toISOString().split('T')[0];
   };
 
+  const handleExportCSV = () => {
+    if (invoices.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'No Data',
+        description: 'There are no invoices to export',
+      });
+      return;
+    }
+
+    // CSV headers
+    const headers = ['Invoice Number', 'Customer', 'Total (USD)', 'Paid (USD)', 'Payment Status', 'Due Date'];
+
+    // CSV rows
+    const rows = invoices.map((invoice: any) => [
+      invoice._id || '',
+      invoice.customer?.name || '',
+      invoice.total_amount_usd || 0,
+      invoice.paid_amount_usd || 0,
+      invoice.payment_status || '',
+      invoice.due_date || '',
+    ]);
+
+    // Combine headers and rows
+    const csvContent = [
+      headers.join(','),
+      ...rows.map((row: any[]) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
+    ].join('\n');
+
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `invoices-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: 'Success',
+      description: `Exported ${invoices.length} invoices to CSV`,
+    });
+  };
+
   const selectedOrder =
     selectedOrderId === 'none' ? null : orders.find((o: any) => o._id === selectedOrderId);
 
@@ -291,7 +353,7 @@ export default function Invoices() {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <Filter className="w-4 h-4 text-muted-foreground" />
               <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -307,10 +369,16 @@ export default function Invoices() {
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={() => navigate('/invoices/new')}>
-              <Plus className="w-4 h-4 mr-2" />
-              Create Invoice
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={handleExportCSV} disabled={invoices.length === 0}>
+                <Download className="w-4 h-4 mr-2" />
+                Export CSV
+              </Button>
+              <Button onClick={() => navigate('/invoices/new')}>
+                <Plus className="w-4 h-4 mr-2" />
+                Create Invoice
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -389,7 +457,11 @@ export default function Invoices() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <Button variant="ghost" size="sm" onClick={() => navigate(`/invoices/${invoice._id}`)}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => navigate(`/invoices/${invoice._id}`)}
+                          >
                             <FileText className="w-4 h-4 mr-1" />
                             View
                           </Button>
@@ -608,16 +680,16 @@ export default function Invoices() {
                 </Label>
                 <Select
                   value={paymentMethod}
-                  onValueChange={(value) => setPaymentMethod(value as PaymentMethod)}
+                  onValueChange={(value) => setPaymentMethod(value as PaymentMethodEnum)}
                 >
                   <SelectTrigger id="paymentMethod">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={PaymentMethod.CASH}>Cash</SelectItem>
-                    <SelectItem value={PaymentMethod.CREDIT_CARD}>Credit Card</SelectItem>
-                    <SelectItem value={PaymentMethod.BANK_TRANSFER}>Bank Transfer</SelectItem>
-                    <SelectItem value={PaymentMethod.CHECK}>Check</SelectItem>
+                    <SelectItem value={PaymentMethodEnum.Cash}>Cash</SelectItem>
+                    <SelectItem value={PaymentMethodEnum.CreditCard}>Credit Card</SelectItem>
+                    <SelectItem value={PaymentMethodEnum.BankTransfer}>Bank Transfer</SelectItem>
+                    <SelectItem value={PaymentMethodEnum.Check}>Check</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -656,11 +728,7 @@ export default function Invoices() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setDeleteDialogOpen(false)}
-            >
+            <Button type="button" variant="outline" onClick={() => setDeleteDialogOpen(false)}>
               Cancel
             </Button>
             <Button

@@ -1,4 +1,12 @@
-import { DollarSign, ShoppingCart, FileText, Package, TrendingUp, TrendingDown, AlertTriangle } from 'lucide-react';
+import {
+  DollarSign,
+  ShoppingCart,
+  FileText,
+  Package,
+  TrendingUp,
+  TrendingDown,
+  AlertTriangle,
+} from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
@@ -45,8 +53,8 @@ export default function Dashboard() {
       name: 'Low Inventory',
       value: metrics?.low_inventory_products?.length || 0,
       icon: Package,
-      change: metrics?.low_inventory_products?.length > 0 ? 'Attention needed' : 'All good',
-      changeType: metrics?.low_inventory_products?.length > 0 ? 'decrease' : 'increase',
+      change: (metrics?.low_inventory_products?.length || 0) > 0 ? 'Attention needed' : 'All good',
+      changeType: (metrics?.low_inventory_products?.length || 0) > 0 ? 'decrease' : 'increase',
       description: 'products need restocking',
     },
   ];
@@ -60,7 +68,7 @@ export default function Dashboard() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {new Array(4).fill(null).map((_, i) => (
-            <Card key={`skeleton-${i}`}>
+            <Card key={`dashboard-skeleton-${i}`}>
               <CardContent className="p-6">
                 <Skeleton className="h-20 w-full" />
               </CardContent>
@@ -129,7 +137,7 @@ export default function Dashboard() {
               {metrics?.top_products?.slice(0, 5).map((product: any, index: number) => {
                 const maxRevenue = metrics?.top_products?.[0]?.total_revenue_usd || 1;
                 const percentage = (product.total_revenue_usd / maxRevenue) * 100;
-                
+
                 return (
                   <div key={product.product_id}>
                     <div className="flex items-center justify-between mb-2">
@@ -139,7 +147,9 @@ export default function Dashboard() {
                         </div>
                         <div>
                           <p className="font-medium">{product.product_name}</p>
-                          <p className="text-sm text-muted-foreground">{product.total_quantity_sold} sold</p>
+                          <p className="text-sm text-muted-foreground">
+                            {product.total_quantity_sold} sold
+                          </p>
                         </div>
                       </div>
                       <p className="font-semibold text-lg">
@@ -170,7 +180,7 @@ export default function Dashboard() {
             <div className="space-y-4">
               {metrics?.low_inventory_products?.slice(0, 5).map((product: any) => {
                 const stockPercentage = (product.quantity_in_stock / product.reorder_level) * 100;
-                
+
                 return (
                   <div key={product.product_id} className="space-y-3">
                     <div className="flex items-start justify-between">
@@ -185,18 +195,17 @@ export default function Dashboard() {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground">Current Stock</span>
-                        <span className="font-semibold text-destructive">{product.quantity_in_stock}</span>
+                        <span className="font-semibold text-destructive">
+                          {product.quantity_in_stock}
+                        </span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground">Reorder Level</span>
                         <span className="font-medium">{product.reorder_level}</span>
                       </div>
-                      <Progress 
-                        value={Math.min(stockPercentage, 100)} 
-                        className="h-2"
-                      />
+                      <Progress value={Math.min(stockPercentage, 100)} className="h-2" />
                     </div>
-                    {metrics?.low_inventory_products?.indexOf(product) < 
+                    {metrics?.low_inventory_products?.indexOf(product) <
                       Math.min(metrics?.low_inventory_products?.length || 0, 5) - 1 && (
                       <Separator className="mt-4" />
                     )}

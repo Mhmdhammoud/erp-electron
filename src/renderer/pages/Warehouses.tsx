@@ -16,7 +16,7 @@ import {
 } from '../components/ui/dialog';
 import { Skeleton } from '../components/ui/skeleton';
 import { useToast } from '../hooks/use-toast';
-import { useGetWarehousesQuery, useDeleteWarehouseMutation } from '../types/generated';
+import { useGetWarehousesQuery, useDeactivateWarehouseMutation } from '../types/generated';
 import { Pagination } from '../components/ui/pagination';
 
 export default function Warehouses() {
@@ -32,15 +32,13 @@ export default function Warehouses() {
   const { data, loading, refetch } = useGetWarehousesQuery({
     variables: {
       filter: {
-        status: statusFilter !== 'all' ? statusFilter : undefined,
+        status: statusFilter !== 'all' ? (statusFilter as any) : undefined,
         search: searchTerm || undefined,
       },
-      page,
-      limit,
     },
   });
 
-  const [deleteWarehouse, { loading: deleting }] = useDeleteWarehouseMutation();
+  const [deactivateWarehouse, { loading: deleting }] = useDeactivateWarehouseMutation();
 
   const warehouses = data?.warehouses?.warehouses || [];
   const totalItems = data?.warehouses?.length || 0;
@@ -54,20 +52,20 @@ export default function Warehouses() {
     if (!warehouseToDelete) return;
 
     try {
-      const result = await deleteWarehouse({
+      const result = await deactivateWarehouse({
         variables: { id: warehouseToDelete },
       });
 
-      if (result.data?.deleteWarehouse?.error) {
+      if (result.data?.deactivateWarehouse?.error) {
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: result.data.deleteWarehouse.error.message,
+          description: result.data.deactivateWarehouse.error.message,
         });
       } else {
         toast({
           title: 'Success',
-          description: 'Warehouse deleted successfully',
+          description: 'Warehouse deactivated successfully',
         });
         refetch();
       }
@@ -75,7 +73,7 @@ export default function Warehouses() {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: error.message || 'Failed to delete warehouse',
+        description: error.message || 'Failed to deactivate warehouse',
       });
     } finally {
       setDeleteDialogOpen(false);
@@ -225,11 +223,6 @@ export default function Warehouses() {
                             {warehouse.capacity.total_sqft.toLocaleString()} sqft
                           </Badge>
                         )}
-                        {warehouse.capacity.storage_units && (
-                          <Badge variant="outline" className="text-xs">
-                            {warehouse.capacity.storage_units} units
-                          </Badge>
-                        )}
                         {warehouse.capacity.max_pallets && (
                           <Badge variant="outline" className="text-xs">
                             {warehouse.capacity.max_pallets} pallets
@@ -286,10 +279,10 @@ export default function Warehouses() {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Warehouse</DialogTitle>
+            <DialogTitle>Deactivate Warehouse</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this warehouse? This action cannot be undone and will
-              affect inventory tracking.
+              Are you sure you want to deactivate this warehouse? This will prevent new inventory
+              operations but preserve existing data.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -302,7 +295,7 @@ export default function Warehouses() {
               onClick={handleConfirmDelete}
               disabled={deleting}
             >
-              {deleting ? 'Deleting...' : 'Delete'}
+              {deleting ? 'Deactivating...' : 'Deactivate'}
             </Button>
           </DialogFooter>
         </DialogContent>

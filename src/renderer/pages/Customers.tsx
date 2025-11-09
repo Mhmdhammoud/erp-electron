@@ -33,7 +33,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Plus, Search, Edit, Trash, MapPin, Mail, Phone } from 'lucide-react';
+import { Plus, Search, Edit, Trash, MapPin, Mail, Phone, Download } from 'lucide-react';
 import {
   useGetCustomersQuery,
   useSearchCustomersQuery,
@@ -261,6 +261,55 @@ export default function Customers() {
     setIsDeleteDialogOpen(true);
   };
 
+  const handleExportCSV = () => {
+    if (customers.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'No Data',
+        description: 'There are no customers to export',
+      });
+      return;
+    }
+
+    // CSV headers
+    const headers = ['Name', 'Email', 'Phone', 'City', 'Country', 'Notes'];
+
+    // CSV rows
+    const rows = customers.map((customer: any) => {
+      const address = customer.addresses?.[0];
+      return [
+        customer.name || '',
+        customer.email || '',
+        customer.phone || '',
+        address?.city || '',
+        address?.country || '',
+        customer.notes || '',
+      ];
+    });
+
+    // Combine headers and rows
+    const csvContent = [
+      headers.join(','),
+      ...rows.map((row: any[]) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
+    ].join('\n');
+
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `customers-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: 'Success',
+      description: `Exported ${customers.length} customers to CSV`,
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="mb-8">
@@ -270,7 +319,7 @@ export default function Customers() {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             <div className="flex-1 max-w-md relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -281,101 +330,112 @@ export default function Customers() {
                 className="pl-10"
               />
             </div>
-            <Button onClick={() => navigate('/customers/new')}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Customer
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={handleExportCSV} disabled={customers.length === 0}>
+                <Download className="w-4 h-4 mr-2" />
+                Export CSV
+              </Button>
+              <Button onClick={() => navigate('/customers/new')}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Customer
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="space-y-3">
-              {[...Array(5)].map((_, i) => (
-                <Skeleton key={i} className="h-16 w-full" />
+              {new Array(5).fill(null).map((_, i) => (
+                <Skeleton key={`skeleton-${i}`} className="h-16 w-full" />
               ))}
             </div>
-          ) : customers.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">
-                No customers found. Add your first customer to get started.
-              </p>
-            </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Address</TableHead>
-                  <TableHead>Notes</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {customers.map((customer: any) => {
-                  const defaultAddress =
-                    customer.addresses?.find((a: any) => a.is_default) || customer.addresses?.[0];
-
-                  return (
-                    <TableRow key={customer._id}>
-                      <TableCell className="font-medium">{customer.name}</TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          {customer.email && (
-                            <div className="flex items-center gap-2 text-sm">
-                              <Mail className="w-3 h-3 text-muted-foreground" />
-                              <span className="text-muted-foreground">{customer.email}</span>
-                            </div>
-                          )}
-                          {customer.phone && (
-                            <div className="flex items-center gap-2 text-sm">
-                              <Phone className="w-3 h-3 text-muted-foreground" />
-                              <span className="text-muted-foreground">{customer.phone}</span>
-                            </div>
-                          )}
-                          {!customer.email && !customer.phone && (
-                            <span className="text-muted-foreground">-</span>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {defaultAddress ? (
-                          <div className="flex items-start gap-2 text-sm">
-                            <MapPin className="w-3 h-3 text-muted-foreground mt-0.5" />
-                            <span className="text-muted-foreground">
-                              {defaultAddress.city}, {defaultAddress.country}
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="max-w-xs truncate text-muted-foreground">
-                        {customer.notes || '-'}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleOpenDialog(customer)}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => openDeleteDialog(customer)}
-                          >
-                            <Trash className="w-4 h-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
+            <>
+              {customers.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground">
+                    No customers found. Add your first customer to get started.
+                  </p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Contact</TableHead>
+                      <TableHead>Address</TableHead>
+                      <TableHead>Notes</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {customers.map((customer: any) => {
+                      const defaultAddress =
+                        customer.addresses?.find((a: any) => a.is_default) ||
+                        customer.addresses?.[0];
+
+                      return (
+                        <TableRow key={customer._id}>
+                          <TableCell className="font-medium">{customer.name}</TableCell>
+                          <TableCell>
+                            <div className="space-y-1">
+                              {customer.email && (
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Mail className="w-3 h-3 text-muted-foreground" />
+                                  <span className="text-muted-foreground">{customer.email}</span>
+                                </div>
+                              )}
+                              {customer.phone && (
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Phone className="w-3 h-3 text-muted-foreground" />
+                                  <span className="text-muted-foreground">{customer.phone}</span>
+                                </div>
+                              )}
+                              {!customer.email && !customer.phone && (
+                                <span className="text-muted-foreground">-</span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {defaultAddress ? (
+                              <div className="flex items-start gap-2 text-sm">
+                                <MapPin className="w-3 h-3 text-muted-foreground mt-0.5" />
+                                <span className="text-muted-foreground">
+                                  {defaultAddress.city}, {defaultAddress.country}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="max-w-xs truncate text-muted-foreground">
+                            {customer.notes || '-'}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleOpenDialog(customer)}
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => openDeleteDialog(customer)}
+                              >
+                                <Trash className="w-4 h-4 text-destructive" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              )}
+            </>
           )}
           {!loading && !hasSearchTerm && customers.length > 0 && (
             <Pagination
@@ -506,11 +566,11 @@ export default function Customers() {
                 Cancel
               </Button>
               <Button type="submit" disabled={creating || updating}>
-                {creating || updating
-                  ? 'Saving...'
-                  : editingCustomer
-                    ? 'Update Customer'
-                    : 'Create Customer'}
+                {(() => {
+                  if (creating || updating) return 'Saving...';
+                  if (editingCustomer) return 'Update Customer';
+                  return 'Create Customer';
+                })()}
               </Button>
             </DialogFooter>
           </form>

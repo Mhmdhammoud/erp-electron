@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Pagination } from '@/components/ui/pagination';
 import {
@@ -43,7 +43,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Search, Edit, Trash, AlertCircle, Package2, DollarSign } from 'lucide-react';
+import { Plus, Search, Edit, Trash, AlertCircle, Package2, DollarSign, Download, Filter } from 'lucide-react';
 import { useCurrency } from '../hooks/useCurrency';
 import {
   useGetProductsQuery,
@@ -80,6 +80,7 @@ const initialFormData: ProductFormData = {
 export default function Products() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -93,9 +94,10 @@ export default function Products() {
 
   const { data, loading, refetch } = useGetProductsQuery({
     variables: {
-      filter: { search: searchTerm },
-      page,
-      limit,
+      filter: {
+        search: searchTerm || undefined,
+        status: statusFilter !== 'all' ? (statusFilter as any) : undefined,
+      },
     },
   });
 
@@ -143,7 +145,7 @@ export default function Products() {
       price_usd: parseFloat(formData.price_usd),
       quantity_in_stock: parseInt(formData.quantity_in_stock),
       reorder_level: parseInt(formData.reorder_level),
-      status: formData.status,
+      status: formData.status as any,
       barcode: formData.barcode || null,
       description: formData.description || null,
     };
@@ -234,6 +236,55 @@ export default function Products() {
     setIsDeleteDialogOpen(true);
   };
 
+  const handleExportCSV = () => {
+    if (products.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'No Data',
+        description: 'There are no products to export',
+      });
+      return;
+    }
+
+    // CSV headers
+    const headers = ['SKU', 'Name', 'Category', 'Price (USD)', 'Stock', 'Reorder Level', 'Status', 'Barcode', 'Description'];
+
+    // CSV rows
+    const rows = products.map((product: any) => [
+      product.sku || '',
+      product.name || '',
+      product.category || '',
+      product.price_usd || 0,
+      product.quantity_in_stock || 0,
+      product.reorder_level || 0,
+      product.status || '',
+      product.barcode || '',
+      product.description || '',
+    ]);
+
+    // Combine headers and rows
+    const csvContent = [
+      headers.join(','),
+      ...rows.map((row: any[]) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
+    ].join('\n');
+
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `products-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: 'Success',
+      description: `Exported ${products.length} products to CSV`,
+    });
+  };
+
   return (
     <TooltipProvider>
       <div className="space-y-6">
@@ -244,21 +295,41 @@ export default function Products() {
 
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <div className="flex-1 max-w-md relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder="Search products by name, SKU, or barcode..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4 flex-1">
+                <div className="flex-1 max-w-md relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="Search products by name, SKU, or barcode..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-[180px]">
+                    <Filter className="w-4 h-4 mr-2" />
+                    <SelectValue placeholder="Filter by status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                    <SelectItem value="discontinued">Discontinued</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              <Button onClick={() => navigate('/products/new')} size="lg">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Product
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" onClick={handleExportCSV} disabled={products.length === 0}>
+                  <Download className="w-4 h-4 mr-2" />
+                  Export CSV
+                </Button>
+                <Button onClick={() => navigate('/products/new')} size="lg">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Product
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
@@ -299,7 +370,7 @@ export default function Products() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {products.map((product: any, index: number) => {
+                    {products.map((product: any) => {
                       const isLowStock = product.quantity_in_stock <= (product.reorder_level || 0);
                       const { usd, lbp } = formatDual(product.price_usd);
 

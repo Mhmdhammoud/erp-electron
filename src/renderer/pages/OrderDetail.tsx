@@ -104,7 +104,7 @@ export default function OrderDetail() {
                 <div className="text-sm font-medium text-muted-foreground mb-1">Order Date</div>
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-muted-foreground" />
-                  <span>{new Date(order.order_date).toLocaleDateString()}</span>
+                  <span>{new Date(order.createdAt).toLocaleDateString()}</span>
                 </div>
               </div>
               <div>

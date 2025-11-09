@@ -12,6 +12,7 @@ import { ThemeProvider } from './components/theme-provider';
 import { apolloClient, setAuthTokenGetter } from './graphql/client';
 import Layout from './components/layout/Layout';
 import { Component, ErrorInfo, ReactNode, useEffect } from 'react';
+import { logger } from './lib/logger';
 
 // Pages
 import Dashboard from './pages/Dashboard';
@@ -49,7 +50,7 @@ import Settings from './pages/Settings';
 const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string;
 
 if (!CLERK_PUBLISHABLE_KEY) {
-  console.error('VITE_CLERK_PUBLISHABLE_KEY is not set');
+  logger.error('VITE_CLERK_PUBLISHABLE_KEY is not set');
 }
 
 interface ErrorBoundaryState {
@@ -68,7 +69,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryStat
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo);
+    logger.error('Error caught by boundary:', error, errorInfo);
   }
 
   render() {
@@ -93,7 +94,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryStat
             {this.state.error?.message || 'An unexpected error occurred'}
           </p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => globalThis.location.reload()}
             style={{
               padding: '0.5rem 1rem',
               backgroundColor: '#3b82f6',
@@ -200,7 +201,7 @@ function AuthTokenSetter() {
         try {
           return await getToken();
         } catch (error) {
-          console.error('Error getting token:', error);
+          logger.error('Error getting token:', error);
           return null;
         }
       });

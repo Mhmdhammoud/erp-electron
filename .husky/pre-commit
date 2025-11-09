@@ -1,0 +1,129 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Define colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+MAGENTA='\033[0;35m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
+CLEAR='\033[0m'
+
+# Print banner
+echo "${BLUE}${BOLD}"
+echo "╔═════════════════════════════════════════════════════════════╗"
+echo "║  __  __  _____ ____  ___ _____ _____    ____  _______      ║"
+echo "║ |  \/  || ____|  _ \|_ _|_   _|_   _|  |  _ \| ____\ \    /║"
+echo "║ | |\/| ||  _| | |_) || |  | |   | |    | | | |  _|  \ \  / ║"
+echo "║ | |  | || |___|  _ < | |  | |   | |    | |_| | |___  \ \/ /║"
+echo "║ |_|  |_||_____|_| \_|___| |_|   |_|    |____/|_____|  \_/  ║"
+echo "╚═════════════════════════════════════════════════════════════╝"
+echo "${CLEAR}"
+
+echo "${CYAN}${BOLD}Pre-commit verification starting...${CLEAR}"
+echo
+
+# Function to handle errors
+handle_error() {
+  echo "${RED}${BOLD}ERROR:${CLEAR} ${RED}$1${CLEAR}"
+  echo "${YELLOW}Commit aborted! Please fix the issues and try again.${CLEAR}"
+  exit 1
+}
+
+# Function for success
+show_success() {
+  echo "${GREEN}${BOLD}✓ $1${CLEAR}"
+}
+
+# Function for loading animation
+show_loading() {
+  echo "${YELLOW}${BOLD}$1...${CLEAR}"
+  
+  # Improved loading animation compatible with macOS
+  bar_width=30
+  for i in $(seq 1 $bar_width); do
+    sleep 0.03
+    
+    # Calculate percentage
+    percentage=$((i * 100 / bar_width))
+    
+    # Choose color based on progress (gradient effect)
+    if [ $percentage -lt 33 ]; then
+      color="${YELLOW}"
+    elif [ $percentage -lt 66 ]; then
+      color="${CYAN}"
+    else
+      color="${GREEN}"
+    fi
+    
+    # Create progress bar with filled and empty parts
+    filled=$(printf '▓%.0s' $(seq 1 $i))
+    empty=$(printf '░%.0s' $(seq 1 $((bar_width - i))))
+    
+    # Print the progress bar, compatible with macOS
+    printf "${color}[%s%s] %3d%%${CLEAR}\r" "$filled" "$empty" "$percentage"
+  done
+  printf "\n"
+}
+
+# Run type checking
+run_type_check() {
+  echo
+  echo "${BLUE}${BOLD}Checking TypeScript...${CLEAR}"
+  show_loading "Running type checks"
+  
+  # Execute type checking with error handling
+  npm run test:types > /dev/null 2>&1
+  
+  if [ $? -ne 0 ]; then
+    echo
+    npm run test:types
+    handle_error "TypeScript checks failed!"
+  else
+    show_success "TypeScript checks passed"
+  fi
+}
+
+# Run linting
+run_linting() {
+  echo
+  echo "${BLUE}${BOLD}Linting code...${CLEAR}"
+  show_loading "Running ESLint"
+  
+  # Execute linting with error handling
+  npm run lint > /dev/null 2>&1
+  
+  if [ $? -ne 0 ]; then
+    echo
+    npm run lint
+    handle_error "Linting failed!"
+  else
+    show_success "Linting passed"
+  fi
+}
+
+# Main execution
+{
+  
+  # Run checks
+  run_type_check
+  run_linting
+  
+  # Show success message
+  echo
+  echo "${GREEN}${BOLD}✓ All checks passed!${CLEAR}"
+  echo "${MAGENTA}${BOLD}You're definitely a clever developer! 🚀${CLEAR}"
+  
+  # Success return code
+  exit 0
+} || {
+  # Capture exit code
+  EXIT_CODE=$?
+}
+
+
+# Propagate the original exit code
+exit $EXIT_CODE
+

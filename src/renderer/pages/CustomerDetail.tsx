@@ -103,8 +103,6 @@ export default function CustomerDetail() {
     );
   }
 
-  const defaultAddress = customer.addresses?.find((addr) => addr.is_default) || customer.addresses?.[0];
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">

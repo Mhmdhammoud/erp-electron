@@ -1,0 +1,17 @@
+query GetInventoryByProduct($productId: ID!) {
+  inventoryByProduct(productId: $productId) {
+    inventories {
+      _id
+      warehouse_id
+      product_id
+      quantity
+      reserved_quantity
+      available_quantity
+      location
+    }
+    error {
+      field
+      message
+    }
+  }
+}

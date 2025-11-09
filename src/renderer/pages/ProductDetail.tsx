@@ -27,7 +27,8 @@ import { useState } from 'react';
 import {
   useGetProductQuery,
   useDeleteProductMutation,
-  useGetProductInventoryDistributionQuery,
+  useGetInventoryByProductQuery,
+  useGetWarehousesQuery,
 } from '../types/generated';
 import { useToast } from '../hooks/use-toast';
 import { useCurrency } from '../hooks/useCurrency';
@@ -47,22 +48,34 @@ export default function ProductDetail() {
   const {
     data: inventoryData,
     loading: inventoryLoading,
-  } = useGetProductInventoryDistributionQuery({
+  } = useGetInventoryByProductQuery({
     variables: { productId: id! },
     skip: !id,
   });
 
+  const {
+    data: warehousesData,
+    loading: warehousesLoading,
+  } = useGetWarehousesQuery();
+
   const [deleteProduct, { loading: deleting }] = useDeleteProductMutation();
 
   const product = data?.product?.product;
-  const inventoryDistribution = inventoryData?.productInventoryDistribution?.inventories || [];
+  const inventories = inventoryData?.inventoryByProduct?.inventories || [];
+  const warehouses = warehousesData?.warehouses?.warehouses || [];
+
+  // Join inventory with warehouse data
+  const inventoryDistribution = inventories.map(inv => ({
+    ...inv,
+    warehouse: warehouses.find(w => w._id === inv.warehouse_id),
+  }));
 
   const handleDelete = async () => {
     if (!product) return;
 
     try {
       const result = await deleteProduct({
-        variables: { id: product.id },
+        variables: { id: product._id },
       });
 
       if (result.data?.deleteProduct?.error) {
@@ -195,7 +208,7 @@ export default function ProductDetail() {
 
             <div>
               <div className="text-sm font-medium text-muted-foreground mb-1">Status</div>
-              <Badge variant={product.status === 'active' ? 'default' : 'secondary'} className="capitalize">
+              <Badge variant={product.status === 'ACTIVE' ? 'default' : 'secondary'} className="capitalize">
                 {product.status}
               </Badge>
             </div>
@@ -282,7 +295,7 @@ export default function ProductDetail() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {inventoryLoading ? (
+          {inventoryLoading || warehousesLoading ? (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>

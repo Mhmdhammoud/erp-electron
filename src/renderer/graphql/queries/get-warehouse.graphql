@@ -16,23 +16,18 @@ query GetWarehouse($id: ID!) {
         }
       }
       contact {
-        name
+        manager_name
         phone
         email
       }
       capacity {
         total_sqft
-        storage_units
         max_pallets
+        max_weight_kg
       }
       operating_hours {
-        monday { open close }
-        tuesday { open close }
-        wednesday { open close }
-        thursday { open close }
-        friday { open close }
-        saturday { open close }
-        sunday { open close }
+        open
+        close
       }
       status
       is_primary

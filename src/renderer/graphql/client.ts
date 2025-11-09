@@ -2,11 +2,12 @@ import { ApolloClient, InMemoryCache, HttpLink, from } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
 import { onError } from '@apollo/client/link/error';
 import { CachePersistor } from 'apollo3-cache-persist';
+import { logger } from '../lib/logger';
 
 const GRAPHQL_ENDPOINT = import.meta.env.VITE_GRAPHQL_ENDPOINT || 'http://localhost:3000/graphql';
 
 // Log the endpoint being used
-console.log('[Apollo Client] GraphQL Endpoint:', GRAPHQL_ENDPOINT);
+logger.log('[Apollo Client] GraphQL Endpoint:', GRAPHQL_ENDPOINT);
 
 // Create HTTP link with fetch options
 const httpLink = new HttpLink({
@@ -17,56 +18,58 @@ const httpLink = new HttpLink({
 });
 
 // Enhanced error handling link
-const errorLink = onError(({ graphQLErrors, networkError, operation }) => {
-  if (graphQLErrors) {
-    for (const { message, locations, path, extensions } of graphQLErrors) {
-      console.error('[GraphQL error]:', {
-        message,
-        locations,
-        path,
-        extensions,
+const errorLink = onError(
+  ({ graphQLErrors: graphQLErrorsParam, networkError: networkErrorParam, operation }) => {
+    if (graphQLErrorsParam) {
+      for (const { message, locations, path, extensions } of graphQLErrorsParam) {
+        logger.error('[GraphQL error]:', {
+          message,
+          locations,
+          path,
+          extensions,
+          operation: operation?.operationName,
+        });
+      }
+    }
+
+    if (networkErrorParam) {
+      // Provide detailed network error information
+      const errorDetails: Record<string, unknown> = {
+        message: networkErrorParam.message,
+        name: networkErrorParam.name,
         operation: operation?.operationName,
-      });
-    }
-  }
+        variables: operation?.variables,
+      };
 
-  if (networkError) {
-    // Provide detailed network error information
-    const errorDetails: Record<string, unknown> = {
-      message: networkError.message,
-      name: networkError.name,
-      operation: operation?.operationName,
-      variables: operation?.variables,
-    };
+      // Handle specific error types
+      if ('statusCode' in networkErrorParam) {
+        errorDetails.statusCode = (networkErrorParam as { statusCode?: number }).statusCode;
+      }
 
-    // Handle specific error types
-    if ('statusCode' in networkError) {
-      errorDetails.statusCode = (networkError as { statusCode?: number }).statusCode;
-    }
+      if ('result' in networkErrorParam) {
+        errorDetails.result = (networkErrorParam as { result?: unknown }).result;
+      }
 
-    if ('result' in networkError) {
-      errorDetails.result = (networkError as { result?: unknown }).result;
+      // Check for common network issues
+      if (networkErrorParam.message.includes('Failed to fetch')) {
+        errorDetails.suggestion = 'Check if the backend server is running and accessible';
+        errorDetails.endpoint = GRAPHQL_ENDPOINT;
+        logger.error('[Network error] Connection failed:', errorDetails);
+        logger.error('[Network error] Troubleshooting:', {
+          endpoint: GRAPHQL_ENDPOINT,
+          checkBackend: 'Ensure backend is running on port 3000',
+          checkCORS: 'Verify CORS is enabled on the backend',
+          checkNetwork: 'Check network connectivity',
+        });
+      } else if (networkErrorParam.message.includes('CORS')) {
+        errorDetails.suggestion = 'CORS error - check backend CORS configuration';
+        logger.error('[Network error] CORS issue:', errorDetails);
+      } else {
+        logger.error('[Network error] Details:', errorDetails);
+      }
     }
-
-    // Check for common network issues
-    if (networkError.message.includes('Failed to fetch')) {
-      errorDetails.suggestion = 'Check if the backend server is running and accessible';
-      errorDetails.endpoint = GRAPHQL_ENDPOINT;
-      console.error('[Network error] Connection failed:', errorDetails);
-      console.error('[Network error] Troubleshooting:', {
-        endpoint: GRAPHQL_ENDPOINT,
-        checkBackend: 'Ensure backend is running on port 3000',
-        checkCORS: 'Verify CORS is enabled on the backend',
-        checkNetwork: 'Check network connectivity',
-      });
-    } else if (networkError.message.includes('CORS')) {
-      errorDetails.suggestion = 'CORS error - check backend CORS configuration';
-      console.error('[Network error] CORS issue:', errorDetails);
-    } else {
-      console.error('[Network error] Details:', errorDetails);
-    }
-  }
-});
+  },
+);
 
 // Token getter function - will be set by AuthProvider
 let getAuthToken: (() => Promise<string | null>) | null = null;
@@ -79,8 +82,8 @@ const authLink = setContext(async (_, { headers }) => {
   try {
     const token = getAuthToken ? await getAuthToken() : null;
     if (!token) {
-      console.warn(
-        '[Apollo Client] No auth token available - requests may fail if authentication is required'
+      logger.warn(
+        '[Apollo Client] No auth token available - requests may fail if authentication is required',
       );
     }
     return {
@@ -90,7 +93,7 @@ const authLink = setContext(async (_, { headers }) => {
       },
     };
   } catch (error) {
-    console.error('[Apollo Client] Error getting auth token:', error);
+    logger.error('[Apollo Client] Error getting auth token:', error);
     return {
       headers: {
         ...headers,

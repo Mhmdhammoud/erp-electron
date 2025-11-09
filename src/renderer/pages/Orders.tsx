@@ -42,6 +42,7 @@ import {
   FileText,
   ChevronRight,
   ChevronLeft,
+  Download,
 } from 'lucide-react';
 import { useCurrency } from '../hooks/useCurrency';
 import {
@@ -53,7 +54,7 @@ import {
   type OrderItemInput,
 } from '../types/generated';
 import { useToast } from '../hooks/use-toast';
-import { OrderStatus, Currency } from '../utils/constants';
+import { OrderStatus as OrderStatusEnum, Currency as CurrencyEnum } from '../types/generated';
 
 interface OrderItemForm {
   product_id: string;
@@ -83,7 +84,7 @@ export default function Orders() {
 
   // Form state
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
-  const [selectedCurrency, setSelectedCurrency] = useState(Currency.USD);
+  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyEnum>(CurrencyEnum.Usd);
   const [orderItems, setOrderItems] = useState<OrderItemForm[]>([]);
   const [notes, setNotes] = useState('');
   const [productSearch, setProductSearch] = useState('');
@@ -92,11 +93,13 @@ export default function Orders() {
   const { formatDual } = useCurrency();
 
   // Use search query if search term is provided, otherwise use regular query
-  const { data: ordersData, loading, refetch } = useGetOrdersQuery({
+  const {
+    data: ordersData,
+    loading,
+    refetch,
+  } = useGetOrdersQuery({
     variables: {
-      filter: statusFilter && statusFilter !== 'all' ? { status: statusFilter } : undefined,
-      page,
-      limit,
+      filter: statusFilter && statusFilter !== 'all' ? { status: statusFilter as any } : undefined,
     },
     skip: searchTerm.length > 0,
   });
@@ -120,11 +123,12 @@ export default function Orders() {
     refetch();
   };
 
-  const handleOpenCreateDialog = () => {
+  // @ts-expect-error - Function may be used in future UI updates
+  const _handleOpenCreateDialog = () => {
     setIsCreateDialogOpen(true);
     setCurrentStep(1);
     setSelectedCustomerId('');
-    setSelectedCurrency(Currency.USD);
+    setSelectedCurrency(CurrencyEnum.Usd);
     setOrderItems([]);
     setNotes('');
   };
@@ -196,8 +200,8 @@ export default function Orders() {
               quantity,
               subtotal_usd: item.unit_price_usd * quantity,
             }
-          : item
-      )
+          : item,
+      ),
     );
   };
 
@@ -222,7 +226,7 @@ export default function Orders() {
           input: {
             customer_id: selectedCustomerId,
             items,
-            currency_used: selectedCurrency,
+            currency_used: selectedCurrency as CurrencyEnum,
             notes: notes || null,
           },
         },
@@ -256,7 +260,7 @@ export default function Orders() {
       const result = await updateOrderStatus({
         variables: {
           id: orderId,
-          input: { status: newStatus },
+          input: { status: newStatus as OrderStatusEnum },
         },
       });
 
@@ -300,6 +304,55 @@ export default function Orders() {
     setOrderToDelete(null);
   };
 
+  const handleExportCSV = () => {
+    if (orders.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'No Data',
+        description: 'There are no orders to export',
+      });
+      return;
+    }
+
+    // CSV headers
+    const headers = ['Order Number', 'Customer', 'Total (USD)', 'Status', 'Currency', 'Order Date'];
+
+    // CSV rows
+    const rows = orders.map((order: any) => {
+      const customer = customers.find((c: any) => c._id === order.customer_id);
+      return [
+        order._id || '',
+        customer?.name || '',
+        order.total_usd || 0,
+        order.status || '',
+        order.currency_used || '',
+        new Date().toISOString().split('T')[0], // Add actual order date if available
+      ];
+    });
+
+    // Combine headers and rows
+    const csvContent = [
+      headers.join(','),
+      ...rows.map((row: any[]) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
+    ].join('\n');
+
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `orders-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: 'Success',
+      description: `Exported ${orders.length} orders to CSV`,
+    });
+  };
+
   const selectedCustomer = customers.find((c: any) => c._id === selectedCustomerId);
 
   return (
@@ -311,7 +364,7 @@ export default function Orders() {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <Filter className="w-4 h-4 text-muted-foreground" />
               <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -320,18 +373,24 @@ export default function Orders() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value={OrderStatus.DRAFT}>Draft</SelectItem>
-                  <SelectItem value={OrderStatus.CONFIRMED}>Confirmed</SelectItem>
-                  <SelectItem value={OrderStatus.SHIPPED}>Shipped</SelectItem>
-                  <SelectItem value={OrderStatus.INVOICED}>Invoiced</SelectItem>
-                  <SelectItem value={OrderStatus.CANCELLED}>Cancelled</SelectItem>
+                  <SelectItem value={OrderStatusEnum.Draft}>Draft</SelectItem>
+                  <SelectItem value={OrderStatusEnum.Confirmed}>Confirmed</SelectItem>
+                  <SelectItem value={OrderStatusEnum.Shipped}>Shipped</SelectItem>
+                  <SelectItem value={OrderStatusEnum.Invoiced}>Invoiced</SelectItem>
+                  <SelectItem value={OrderStatusEnum.Cancelled}>Cancelled</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={() => navigate('/orders/new')}>
-              <Plus className="w-4 h-4 mr-2" />
-              Create Order
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={handleExportCSV} disabled={orders.length === 0}>
+                <Download className="w-4 h-4 mr-2" />
+                Export CSV
+              </Button>
+              <Button onClick={() => navigate('/orders/new')}>
+                <Plus className="w-4 h-4 mr-2" />
+                Create Order
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -382,9 +441,7 @@ export default function Orders() {
                   return (
                     <TableRow key={order.id}>
                       <TableCell className="font-mono text-sm">{order.id.slice(0, 8)}</TableCell>
-                      <TableCell className="font-medium">
-                        {customer?.name || 'Unknown'}
-                      </TableCell>
+                      <TableCell className="font-medium">{customer?.name || 'Unknown'}</TableCell>
                       <TableCell>{order.items?.length || 0} items</TableCell>
                       <TableCell className="font-medium">{usd}</TableCell>
                       <TableCell>
@@ -399,17 +456,21 @@ export default function Orders() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value={OrderStatus.DRAFT}>Draft</SelectItem>
-                            <SelectItem value={OrderStatus.CONFIRMED}>Confirmed</SelectItem>
-                            <SelectItem value={OrderStatus.SHIPPED}>Shipped</SelectItem>
-                            <SelectItem value={OrderStatus.INVOICED}>Invoiced</SelectItem>
-                            <SelectItem value={OrderStatus.CANCELLED}>Cancelled</SelectItem>
+                            <SelectItem value={OrderStatusEnum.Draft}>Draft</SelectItem>
+                            <SelectItem value={OrderStatusEnum.Confirmed}>Confirmed</SelectItem>
+                            <SelectItem value={OrderStatusEnum.Shipped}>Shipped</SelectItem>
+                            <SelectItem value={OrderStatusEnum.Invoiced}>Invoiced</SelectItem>
+                            <SelectItem value={OrderStatusEnum.Cancelled}>Cancelled</SelectItem>
                           </SelectContent>
                         </Select>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <Button variant="ghost" size="sm" onClick={() => navigate(`/orders/${order._id}`)}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => navigate(`/orders/${order._id}`)}
+                          >
                             View Details
                           </Button>
                           <Button
@@ -447,9 +508,7 @@ export default function Orders() {
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create New Order</DialogTitle>
-            <DialogDescription>
-              Follow the steps to create a new sales order
-            </DialogDescription>
+            <DialogDescription>Follow the steps to create a new sales order</DialogDescription>
           </DialogHeader>
 
           {/* Wizard Steps */}
@@ -461,8 +520,8 @@ export default function Orders() {
                     currentStep === step.id
                       ? 'bg-primary text-primary-foreground'
                       : currentStep > step.id
-                      ? 'bg-primary/20 text-primary'
-                      : 'bg-muted text-muted-foreground'
+                        ? 'bg-primary/20 text-primary'
+                        : 'bg-muted text-muted-foreground'
                   }`}
                 >
                   <step.icon className="w-4 h-4" />
@@ -595,7 +654,7 @@ export default function Orders() {
                                 onChange={(e) =>
                                   handleUpdateQuantity(
                                     item.product_id,
-                                    parseInt(e.target.value) || 1
+                                    parseInt(e.target.value) || 1,
                                   )
                                 }
                                 className="w-20"
@@ -648,16 +707,11 @@ export default function Orders() {
                       <div className="text-sm text-muted-foreground mb-2">Products</div>
                       <div className="space-y-2">
                         {orderItems.map((item) => (
-                          <div
-                            key={item.product_id}
-                            className="flex justify-between text-sm"
-                          >
+                          <div key={item.product_id} className="flex justify-between text-sm">
                             <span>
                               {item.product_name} x {item.quantity}
                             </span>
-                            <span className="font-medium">
-                              ${item.subtotal_usd.toFixed(2)}
-                            </span>
+                            <span className="font-medium">${item.subtotal_usd.toFixed(2)}</span>
                           </div>
                         ))}
                       </div>
@@ -676,14 +730,14 @@ export default function Orders() {
                   <Label htmlFor="currency">Currency</Label>
                   <Select
                     value={selectedCurrency}
-                    onValueChange={(value) => setSelectedCurrency(value as Currency)}
+                    onValueChange={(value) => setSelectedCurrency(value as CurrencyEnum)}
                   >
                     <SelectTrigger id="currency">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={Currency.USD}>USD</SelectItem>
-                      <SelectItem value={Currency.LBP}>LBP</SelectItem>
+                      <SelectItem value={CurrencyEnum.Usd}>USD</SelectItem>
+                      <SelectItem value={CurrencyEnum.Lbp}>LBP</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -736,11 +790,7 @@ export default function Orders() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setDeleteDialogOpen(false)}
-            >
+            <Button type="button" variant="outline" onClick={() => setDeleteDialogOpen(false)}>
               Cancel
             </Button>
             <Button

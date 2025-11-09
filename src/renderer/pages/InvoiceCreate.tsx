@@ -73,10 +73,10 @@ export default function InvoiceCreate() {
       const result = await createInvoice({
         variables: {
           input: {
-            order_id: selectedOrderId === 'none' ? null : selectedOrderId,
-            customer_id: selectedCustomerId,
+            order_id: selectedOrderId === 'none' ? '' : selectedOrderId,
             due_date: dueDate,
-            notes: invoiceNotes || null,
+            issue_date: new Date().toISOString(),
+            notes: invoiceNotes || undefined,
           },
         },
       });
@@ -125,7 +125,9 @@ export default function InvoiceCreate() {
         </Button>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Create New Invoice</h1>
-          <p className="text-muted-foreground mt-2">Create an invoice from an order or standalone</p>
+          <p className="text-muted-foreground mt-2">
+            Create an invoice from an order or standalone
+          </p>
         </div>
       </div>
 
@@ -135,9 +137,7 @@ export default function InvoiceCreate() {
             <Receipt className="w-5 h-5" />
             Invoice Information
           </CardTitle>
-          <CardDescription>
-            Select an existing order or create a standalone invoice
-          </CardDescription>
+          <CardDescription>Select an existing order or create a standalone invoice</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleCreateInvoice} className="space-y-6">
@@ -281,9 +281,9 @@ export default function InvoiceCreate() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {selectedOrder.items?.map((item: any, index: number) => (
+              {selectedOrder.items?.map((item: any) => (
                 <div
-                  key={index}
+                  key={`${item.product_id}-${item.quantity}`}
                   className="flex justify-between items-center p-3 bg-muted/50 rounded-md"
                 >
                   <div>

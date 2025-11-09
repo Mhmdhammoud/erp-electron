@@ -39,7 +39,7 @@ import { useToast } from '../hooks/use-toast';
 import {
   useGetWarehouseQuery,
   useGetWarehouseInventoryQuery,
-  useDeleteWarehouseMutation,
+  useDeactivateWarehouseMutation,
 } from '../types/generated';
 
 export default function WarehouseDetail() {
@@ -51,7 +51,7 @@ export default function WarehouseDetail() {
   const [inventoryPage, setInventoryPage] = useState(1);
   const inventoryLimit = 10;
 
-  const { data, loading, refetch } = useGetWarehouseQuery({
+  const { data, loading } = useGetWarehouseQuery({
     variables: { id: id || '' },
     skip: !id,
   });
@@ -59,7 +59,6 @@ export default function WarehouseDetail() {
   const {
     data: inventoryData,
     loading: inventoryLoading,
-    refetch: refetchInventory,
   } = useGetWarehouseInventoryQuery({
     variables: {
       warehouseId: id || '',
@@ -69,7 +68,7 @@ export default function WarehouseDetail() {
     skip: !id,
   });
 
-  const [deleteWarehouse, { loading: deleting }] = useDeleteWarehouseMutation();
+  const [deactivateWarehouse, { loading: deleting }] = useDeactivateWarehouseMutation();
 
   const warehouse = data?.warehouse?.warehouse;
   const inventories = inventoryData?.warehouseInventory?.inventories || [];
@@ -79,18 +78,18 @@ export default function WarehouseDetail() {
     if (!id) return;
 
     try {
-      const { data } = await deleteWarehouse({ variables: { id } });
+      const { data } = await deactivateWarehouse({ variables: { id } });
 
-      if (data?.deleteWarehouse?.error) {
+      if (data?.deactivateWarehouse?.error) {
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: data.deleteWarehouse.error.message,
+          description: data.deactivateWarehouse.error.message,
         });
       } else {
         toast({
           title: 'Success',
-          description: 'Warehouse deleted successfully',
+          description: 'Warehouse deactivated successfully',
         });
         navigate('/warehouses');
       }
@@ -118,10 +117,6 @@ export default function WarehouseDetail() {
     }
   };
 
-  const formatTime = (time?: string) => {
-    if (!time) return 'Closed';
-    return time;
-  };
 
   if (loading) {
     return (
@@ -145,9 +140,9 @@ export default function WarehouseDetail() {
   }
 
   const totalCapacityUsed =
-    warehouse.capacity?.total_sqft && warehouse.capacity.storage_units
+    warehouse.capacity?.max_pallets
       ? Math.round(
-          ((warehouse.capacity.storage_units || 0) / (warehouse.capacity.total_sqft || 1)) * 100
+          ((warehouse.capacity.max_pallets || 0) / 1000) * 100
         )
       : 0;
 
@@ -236,11 +231,11 @@ export default function WarehouseDetail() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {warehouse.contact?.name ? (
+                {warehouse.contact?.manager_name ? (
                   <>
                     <div className="flex items-center gap-2">
                       <Building className="h-4 w-4 text-muted-foreground" />
-                      <span>{warehouse.contact.name}</span>
+                      <span>{warehouse.contact.manager_name}</span>
                     </div>
                     {warehouse.contact.phone && (
                       <div className="flex items-center gap-2">
@@ -280,11 +275,11 @@ export default function WarehouseDetail() {
                         </span>
                       </div>
                     )}
-                    {warehouse.capacity.storage_units && (
+                    {warehouse.capacity.max_weight_kg && (
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Storage Units:</span>
+                        <span className="text-muted-foreground">Max Weight (kg):</span>
                         <span className="font-semibold">
-                          {warehouse.capacity.storage_units.toLocaleString()}
+                          {warehouse.capacity.max_weight_kg.toLocaleString()}
                         </span>
                       </div>
                     )}
@@ -328,24 +323,14 @@ export default function WarehouseDetail() {
               <CardContent>
                 {warehouse.operating_hours ? (
                   <div className="space-y-2">
-                    {[
-                      { day: 'Monday', hours: warehouse.operating_hours.monday },
-                      { day: 'Tuesday', hours: warehouse.operating_hours.tuesday },
-                      { day: 'Wednesday', hours: warehouse.operating_hours.wednesday },
-                      { day: 'Thursday', hours: warehouse.operating_hours.thursday },
-                      { day: 'Friday', hours: warehouse.operating_hours.friday },
-                      { day: 'Saturday', hours: warehouse.operating_hours.saturday },
-                      { day: 'Sunday', hours: warehouse.operating_hours.sunday },
-                    ].map(({ day, hours }) => (
-                      <div key={day} className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">{day}:</span>
-                        <span>
-                          {hours
-                            ? `${formatTime(hours.open)} - ${formatTime(hours.close)}`
-                            : 'Closed'}
-                        </span>
-                      </div>
-                    ))}
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Hours:</span>
+                      <span>
+                        {warehouse.operating_hours.open && warehouse.operating_hours.close
+                          ? `${warehouse.operating_hours.open} - ${warehouse.operating_hours.close}`
+                          : 'Not specified'}
+                      </span>
+                    </div>
                   </div>
                 ) : (
                   <p className="text-muted-foreground">No operating hours set</p>
