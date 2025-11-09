@@ -46,8 +46,10 @@ import {
 import { useCurrency } from '../hooks/useCurrency';
 import {
   useGetOrdersQuery,
+  useSearchOrdersQuery,
   useCreateOrderMutation,
   useUpdateOrderStatusMutation,
+  useDeleteOrderMutation,
   useGetCustomersQuery,
   useGetProductsQuery,
   type OrderItemInput,
@@ -73,10 +75,13 @@ const ORDER_WIZARD_STEPS = [
 export default function Orders() {
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
 
   // Form state
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
@@ -88,12 +93,22 @@ export default function Orders() {
   const { toast } = useToast();
   const { formatDual } = useCurrency();
 
+  // Use search query if search term is provided, otherwise use regular query
   const { data: ordersData, loading, refetch } = useGetOrdersQuery({
     variables: {
       filter: statusFilter && statusFilter !== 'all' ? { status: statusFilter } : undefined,
       page,
       limit,
     },
+    skip: searchTerm.length > 0,
+  });
+
+  const { data: searchData, loading: searchLoading, refetch: refetchSearch } = useSearchOrdersQuery({
+    variables: {
+      searchTerm,
+      filter: statusFilter && statusFilter !== 'all' ? { status: statusFilter } : undefined,
+    },
+    skip: searchTerm.length === 0,
   });
 
   const { data: customersData } = useGetCustomersQuery();
@@ -103,11 +118,24 @@ export default function Orders() {
 
   const [createOrder, { loading: creating }] = useCreateOrderMutation();
   const [updateOrderStatus] = useUpdateOrderStatusMutation();
+  const [deleteOrder, { loading: deleting }] = useDeleteOrderMutation();
 
-  const orders = ordersData?.orders?.orders || [];
+  // Use search results if searching, otherwise use regular results
+  const isSearching = searchTerm.length > 0;
+  const activeData = isSearching ? searchData?.searchOrders : ordersData?.orders;
+  const orders = activeData?.orders || [];
   const customers = customersData?.customers?.customers || [];
   const products = productsData?.products?.products || [];
-  const totalItems = ordersData?.orders?.length || 0;
+  const totalItems = activeData?.length || 0;
+  const isLoading = isSearching ? searchLoading : loading;
+
+  const handleRefetch = () => {
+    if (isSearching) {
+      refetchSearch();
+    } else {
+      refetch();
+    }
+  };
 
   const handleOpenCreateDialog = () => {
     setIsCreateDialogOpen(true);
@@ -229,7 +257,7 @@ export default function Orders() {
           description: 'Order created successfully',
         });
         handleCloseCreateDialog();
-        refetch();
+        handleRefetch();
       }
     } catch (error: any) {
       toast({
@@ -260,7 +288,7 @@ export default function Orders() {
           title: 'Success',
           description: 'Order status updated successfully',
         });
-        refetch();
+        handleRefetch();
       }
     } catch (error: any) {
       toast({
@@ -268,6 +296,44 @@ export default function Orders() {
         title: 'Error',
         description: error.message || 'An error occurred',
       });
+    }
+  };
+
+  const handleDeleteClick = (orderId: string) => {
+    setOrderToDelete(orderId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!orderToDelete) return;
+
+    try {
+      const result = await deleteOrder({
+        variables: { id: orderToDelete },
+      });
+
+      if (result.data?.deleteOrder?.error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: result.data.deleteOrder.error.message,
+        });
+      } else {
+        toast({
+          title: 'Success',
+          description: 'Order deleted successfully',
+        });
+        handleRefetch();
+      }
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.message || 'Failed to delete order',
+      });
+    } finally {
+      setDeleteDialogOpen(false);
+      setOrderToDelete(null);
     }
   };
 
@@ -306,7 +372,20 @@ export default function Orders() {
           </div>
         </CardHeader>
         <CardContent>
-          {loading ? (
+          {/* Search Input */}
+          <div className="mb-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search orders by customer name, order ID..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+
+          {isLoading ? (
             <div className="space-y-3">
               {[...Array(5)].map((_, i) => (
                 <Skeleton key={i} className="h-16 w-full" />
@@ -366,9 +445,18 @@ export default function Orders() {
                         </Select>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" onClick={() => navigate(`/orders/${order._id}`)}>
-                          View Details
-                        </Button>
+                        <div className="flex items-center justify-end gap-2">
+                          <Button variant="ghost" size="sm" onClick={() => navigate(`/orders/${order._id}`)}>
+                            View Details
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteClick(order._id)}
+                          >
+                            <Trash className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
@@ -376,7 +464,7 @@ export default function Orders() {
               </TableBody>
             </Table>
           )}
-          {!loading && orders.length > 0 && (
+          {!isLoading && orders.length > 0 && !isSearching && (
             <Pagination
               currentPage={page}
               totalItems={totalItems}
@@ -671,6 +759,35 @@ export default function Orders() {
                 {creating ? 'Creating...' : 'Create Order'}
               </Button>
             )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Order</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this order? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={deleting}
+            >
+              {deleting ? 'Deleting...' : 'Delete'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
