@@ -1,0 +1,11 @@
+mutation DeleteOrder($id: ID!) {
+  deleteOrder(id: $id) {
+    order {
+      _id
+    }
+    error {
+      field
+      message
+    }
+  }
+}

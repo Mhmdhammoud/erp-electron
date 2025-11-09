@@ -17,12 +17,20 @@ import { Component, ErrorInfo, ReactNode, useEffect } from 'react';
 import Dashboard from './pages/Dashboard';
 import Products from './pages/Products';
 import ProductCreate from './pages/ProductCreate';
+import ProductDetail from './pages/ProductDetail';
+import ProductEdit from './pages/ProductEdit';
 import Customers from './pages/Customers';
 import CustomerCreate from './pages/CustomerCreate';
+import CustomerDetail from './pages/CustomerDetail';
+import CustomerEdit from './pages/CustomerEdit';
 import Orders from './pages/Orders';
 import OrderCreate from './pages/OrderCreate';
+import OrderDetail from './pages/OrderDetail';
+import OrderEdit from './pages/OrderEdit';
 import Invoices from './pages/Invoices';
 import InvoiceCreate from './pages/InvoiceCreate';
+import InvoiceDetail from './pages/InvoiceDetail';
+import InvoiceEdit from './pages/InvoiceEdit';
 import Settings from './pages/Settings';
 
 const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
@@ -107,12 +115,20 @@ function App() {
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/products" element={<Products />} />
                     <Route path="/products/new" element={<ProductCreate />} />
+                    <Route path="/products/:id/edit" element={<ProductEdit />} />
+                    <Route path="/products/:id" element={<ProductDetail />} />
                     <Route path="/customers" element={<Customers />} />
                     <Route path="/customers/new" element={<CustomerCreate />} />
+                    <Route path="/customers/:id/edit" element={<CustomerEdit />} />
+                    <Route path="/customers/:id" element={<CustomerDetail />} />
                     <Route path="/orders" element={<Orders />} />
                     <Route path="/orders/new" element={<OrderCreate />} />
+                    <Route path="/orders/:id/edit" element={<OrderEdit />} />
+                    <Route path="/orders/:id" element={<OrderDetail />} />
                     <Route path="/invoices" element={<Invoices />} />
                     <Route path="/invoices/new" element={<InvoiceCreate />} />
+                    <Route path="/invoices/:id/edit" element={<InvoiceEdit />} />
+                    <Route path="/invoices/:id" element={<InvoiceDetail />} />
                     <Route path="/settings" element={<Settings />} />
                   </Routes>
                 </Layout>

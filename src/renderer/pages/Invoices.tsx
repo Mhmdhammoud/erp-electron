@@ -31,12 +31,14 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Plus, Filter, DollarSign, FileText, AlertCircle, Receipt } from 'lucide-react';
+import { Plus, Filter, DollarSign, FileText, AlertCircle, Receipt, Trash, Search } from 'lucide-react';
 import { useCurrency } from '../hooks/useCurrency';
 import {
   useGetInvoicesQuery,
+  useSearchInvoicesQuery,
   useCreateInvoiceMutation,
   useRecordPaymentMutation,
+  useDeleteInvoiceMutation,
   useGetOrdersQuery,
   useGetCustomersQuery,
 } from '../types/generated';
@@ -46,11 +48,14 @@ import { PaymentStatus, PaymentMethod } from '../utils/constants';
 export default function Invoices() {
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [invoiceToDelete, setInvoiceToDelete] = useState<string | null>(null);
 
   // Create invoice form
   const [selectedOrderId, setSelectedOrderId] = useState('none');
@@ -66,12 +71,22 @@ export default function Invoices() {
   const { toast } = useToast();
   const { formatDual } = useCurrency();
 
+  // Use search query if search term is provided, otherwise use regular query
   const { data: invoicesData, loading, refetch } = useGetInvoicesQuery({
     variables: {
       filter: statusFilter && statusFilter !== 'all' ? { payment_status: statusFilter } : undefined,
       page,
       limit,
     },
+    skip: searchTerm.length > 0,
+  });
+
+  const { data: searchData, loading: searchLoading, refetch: refetchSearch } = useSearchInvoicesQuery({
+    variables: {
+      searchTerm,
+      filter: statusFilter && statusFilter !== 'all' ? { payment_status: statusFilter } : undefined,
+    },
+    skip: searchTerm.length === 0,
   });
 
   const { data: ordersData } = useGetOrdersQuery();
@@ -79,11 +94,24 @@ export default function Invoices() {
 
   const [createInvoice, { loading: creating }] = useCreateInvoiceMutation();
   const [recordPayment, { loading: recording }] = useRecordPaymentMutation();
+  const [deleteInvoice, { loading: deleting }] = useDeleteInvoiceMutation();
 
-  const invoices = invoicesData?.invoices?.invoices || [];
+  // Use search results if searching, otherwise use regular results
+  const isSearching = searchTerm.length > 0;
+  const activeData = isSearching ? searchData?.searchInvoices : invoicesData?.invoices;
+  const invoices = activeData?.invoices || [];
   const orders = ordersData?.orders?.orders || [];
   const customers = customersData?.customers?.customers || [];
-  const totalItems = invoicesData?.invoices?.length || 0;
+  const totalItems = activeData?.length || 0;
+  const isLoading = isSearching ? searchLoading : loading;
+
+  const handleRefetch = () => {
+    if (isSearching) {
+      refetchSearch();
+    } else {
+      refetch();
+    }
+  };
 
   const handleOpenCreateDialog = () => {
     setIsCreateDialogOpen(true);
@@ -144,7 +172,7 @@ export default function Invoices() {
           description: 'Invoice created successfully',
         });
         handleCloseCreateDialog();
-        refetch();
+        handleRefetch();
       }
     } catch (error: any) {
       toast({
@@ -218,7 +246,7 @@ export default function Invoices() {
           description: 'Payment recorded successfully',
         });
         handleClosePaymentDialog();
-        refetch();
+        handleRefetch();
       }
     } catch (error: any) {
       toast({
@@ -226,6 +254,44 @@ export default function Invoices() {
         title: 'Error',
         description: error.message || 'An error occurred',
       });
+    }
+  };
+
+  const handleDeleteClick = (invoiceId: string) => {
+    setInvoiceToDelete(invoiceId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!invoiceToDelete) return;
+
+    try {
+      const result = await deleteInvoice({
+        variables: { id: invoiceToDelete },
+      });
+
+      if (result.data?.deleteInvoice?.error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: result.data.deleteInvoice.error.message,
+        });
+      } else {
+        toast({
+          title: 'Success',
+          description: 'Invoice deleted successfully',
+        });
+        handleRefetch();
+      }
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.message || 'Failed to delete invoice',
+      });
+    } finally {
+      setDeleteDialogOpen(false);
+      setInvoiceToDelete(null);
     }
   };
 
@@ -285,7 +351,20 @@ export default function Invoices() {
           </div>
         </CardHeader>
         <CardContent>
-          {loading ? (
+          {/* Search Input */}
+          <div className="mb-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search invoices by invoice number, customer name..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+
+          {isLoading ? (
             <div className="space-y-3">
               {new Array(5).fill(null).map((_, i) => (
                 <Skeleton key={`skeleton-${i}`} className="h-16 w-full" />
@@ -347,7 +426,7 @@ export default function Invoices() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="sm" onClick={() => navigate(`/invoices/${invoice._id}`)}>
                             <FileText className="w-4 h-4 mr-1" />
                             View
                           </Button>
@@ -361,6 +440,13 @@ export default function Invoices() {
                               Pay
                             </Button>
                           )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteClick(invoice._id)}
+                          >
+                            <Trash className="h-4 w-4 text-red-500" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -369,7 +455,7 @@ export default function Invoices() {
               </TableBody>
             </Table>
           )}
-          {!loading && invoices.length > 0 && (
+          {!isLoading && invoices.length > 0 && !isSearching && (
             <Pagination
               currentPage={page}
               totalItems={totalItems}
@@ -592,6 +678,35 @@ export default function Invoices() {
             </Button>
             <Button onClick={handleRecordPayment} disabled={recording}>
               {recording ? 'Recording...' : 'Record Payment'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Invoice</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this invoice? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={deleting}
+            >
+              {deleting ? 'Deleting...' : 'Delete'}
             </Button>
           </DialogFooter>
         </DialogContent>

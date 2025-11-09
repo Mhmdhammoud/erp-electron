@@ -1,0 +1,30 @@
+query SearchInvoices($searchTerm: String!, $filter: InvoiceFilterInput) {
+  searchInvoices(searchTerm: $searchTerm, filter: $filter) {
+    invoices {
+      _id
+      invoice_number
+      order_id
+      customer_id
+      payments {
+        date
+        amount_usd
+        amount_lbp
+        payment_method
+        notes
+        recorded_by
+      }
+      total_usd
+      paid_amount_usd
+      payment_status
+      due_date
+      notes
+    }
+    error {
+      field
+      message
+    }
+    length
+    page
+    limit
+  }
+}
