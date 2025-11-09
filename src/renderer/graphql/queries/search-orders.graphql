@@ -1,0 +1,29 @@
+query SearchOrders($searchTerm: String!, $filter: OrderFilterInput) {
+  searchOrders(searchTerm: $searchTerm, filter: $filter) {
+    orders {
+      _id
+      customer_id
+      order_date
+      status
+      currency_used
+      total_usd
+      total_lbp
+      items {
+        product_id
+        product_name
+        product_sku
+        quantity
+        unit_price_usd
+        subtotal_usd
+      }
+      notes
+    }
+    error {
+      field
+      message
+    }
+    length
+    page
+    limit
+  }
+}
