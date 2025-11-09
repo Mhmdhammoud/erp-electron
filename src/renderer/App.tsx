@@ -31,6 +31,11 @@ import Invoices from './pages/Invoices';
 import InvoiceCreate from './pages/InvoiceCreate';
 import InvoiceDetail from './pages/InvoiceDetail';
 import InvoiceEdit from './pages/InvoiceEdit';
+import Warehouses from './pages/Warehouses';
+import WarehouseCreate from './pages/WarehouseCreate';
+import WarehouseDetail from './pages/WarehouseDetail';
+import WarehouseEdit from './pages/WarehouseEdit';
+import WarehouseTransfer from './pages/WarehouseTransfer';
 import Settings from './pages/Settings';
 
 const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string;
@@ -129,6 +134,11 @@ function App() {
                     <Route path="/invoices/new" element={<InvoiceCreate />} />
                     <Route path="/invoices/:id/edit" element={<InvoiceEdit />} />
                     <Route path="/invoices/:id" element={<InvoiceDetail />} />
+                    <Route path="/warehouses" element={<Warehouses />} />
+                    <Route path="/warehouses/new" element={<WarehouseCreate />} />
+                    <Route path="/warehouses/:id/edit" element={<WarehouseEdit />} />
+                    <Route path="/warehouses/:id/transfer" element={<WarehouseTransfer />} />
+                    <Route path="/warehouses/:id" element={<WarehouseDetail />} />
                     <Route path="/settings" element={<Settings />} />
                   </Routes>
                 </Layout>

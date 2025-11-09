@@ -1,0 +1,26 @@
+query GetProductInventoryDistribution($productId: ID!) {
+  productInventoryDistribution(productId: $productId) {
+    inventories {
+      _id
+      warehouse_id
+      product_id
+      quantity
+      reserved_quantity
+      available_quantity
+      location
+      warehouse {
+        _id
+        name
+        code
+        address {
+          city
+          country
+        }
+      }
+    }
+    error {
+      field
+      message
+    }
+  }
+}
