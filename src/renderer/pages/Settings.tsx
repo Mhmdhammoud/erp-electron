@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTenant } from '../hooks/useTenant';
 import { useUpdateTenantSettingsMutation } from '../types/generated';
+import { useUpload } from '../hooks/useUpload';
 import { useToast } from '../hooks/use-toast';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
+import { FileUploader } from '../components/common/FileUploader';
 import { Building2, Palette, DollarSign, Loader2 } from 'lucide-react';
 
 interface BusinessFormData {
@@ -16,7 +18,6 @@ interface BusinessFormData {
 }
 
 interface BrandingFormData {
-  logoUrl: string;
   primaryColor: string;
   invoiceFooter: string;
   companyAddress: string;
@@ -30,8 +31,10 @@ export default function Settings() {
   const { tenant, loading, refetch } = useTenant();
   const [activeTab, setActiveTab] = useState('business');
   const { toast } = useToast();
+  const { handleUpload, uploadProgress, isUploading, error: uploadError } = useUpload();
 
   const [updateTenantSettings, { loading: updating }] = useUpdateTenantSettingsMutation();
+  const [logoUrl, setLogoUrl] = useState<string | undefined>(tenant?.branding?.logoUrl);
 
   const businessForm = useForm<BusinessFormData>({
     values: {
@@ -44,7 +47,6 @@ export default function Settings() {
 
   const brandingForm = useForm<BrandingFormData>({
     values: {
-      logoUrl: tenant?.branding?.logoUrl || '',
       primaryColor: tenant?.branding?.primaryColor || '#3b82f6',
       invoiceFooter: tenant?.branding?.invoiceFooter || '',
       companyAddress: tenant?.branding?.companyAddress || '',
@@ -103,7 +105,7 @@ export default function Settings() {
           id: tenant?._id || '',
           input: {
             branding: {
-              logo_url: data.logoUrl,
+              logo_url: logoUrl,
               primary_color: data.primaryColor,
               invoice_footer: data.invoiceFooter,
               company_address: data.companyAddress,
@@ -247,11 +249,38 @@ export default function Settings() {
         <Card title="Branding & Customization">
           <form onSubmit={brandingForm.handleSubmit(handleBrandingSubmit)} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Logo URL</label>
-              <Input
-                {...brandingForm.register('logoUrl')}
-                placeholder="https://example.com/logo.png"
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Company Logo
+              </label>
+              <FileUploader
+                id="company-logo"
+                accept="image"
+                variant="dropzone"
+                value={logoUrl || tenant?.branding?.logoUrl}
+                onChange={async (file) => {
+                  try {
+                    const url = await handleUpload(file, 'company-logo');
+                    setLogoUrl(url);
+                    toast({
+                      title: 'Success',
+                      description: 'Logo uploaded successfully',
+                    });
+                  } catch (err: any) {
+                    toast({
+                      variant: 'destructive',
+                      title: 'Error',
+                      description: err.message || 'Failed to upload logo',
+                    });
+                  }
+                }}
+                onRemove={() => setLogoUrl(undefined)}
+                progress={uploadProgress['company-logo'] || 0}
+                isUploading={isUploading}
+                showPreview={true}
               />
+              {uploadError && (
+                <p className="text-sm text-red-600 mt-2">{uploadError}</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
