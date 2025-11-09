@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Pagination } from '@/components/ui/pagination';
 import {
   Table,
   TableBody,
@@ -79,6 +80,8 @@ const initialFormData: ProductFormData = {
 export default function Products() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
@@ -89,7 +92,11 @@ export default function Products() {
   const { formatDual } = useCurrency();
 
   const { data, loading, refetch } = useGetProductsQuery({
-    variables: { filter: { search: searchTerm } },
+    variables: {
+      filter: { search: searchTerm },
+      page,
+      limit,
+    },
   });
 
   const [createProduct, { loading: creating }] = useCreateProductMutation();
@@ -97,6 +104,7 @@ export default function Products() {
   const [deleteProduct, { loading: deleting }] = useDeleteProductMutation();
 
   const products = data?.products?.products || [];
+  const totalItems = data?.products?.length || 0;
 
   const handleOpenDialog = (product?: any) => {
     if (product) {
@@ -388,6 +396,18 @@ export default function Products() {
                   </TableBody>
                 </Table>
               </div>
+            )}
+            {!loading && products.length > 0 && (
+              <Pagination
+                currentPage={page}
+                totalItems={totalItems}
+                itemsPerPage={limit}
+                onPageChange={setPage}
+                onItemsPerPageChange={(newLimit) => {
+                  setLimit(newLimit);
+                  setPage(1);
+                }}
+              />
             )}
           </CardContent>
         </Card>

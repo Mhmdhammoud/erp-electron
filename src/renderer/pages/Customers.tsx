@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Pagination } from '@/components/ui/pagination';
 import {
   Table,
   TableBody,
@@ -73,6 +74,8 @@ const initialFormData: CustomerFormData = {
 export default function Customers() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<any>(null);
@@ -89,7 +92,7 @@ export default function Customers() {
     loading: customersLoading,
     refetch: refetchCustomers,
   } = useGetCustomersQuery({
-    variables: { filter: {} },
+    variables: { page, limit },
     skip: hasSearchTerm,
   });
 
@@ -107,6 +110,7 @@ export default function Customers() {
 
   const loading = customersLoading || searchLoading;
   const refetch = hasSearchTerm ? refetchSearch : refetchCustomers;
+  const totalItems = customersData?.customers?.length || 0;
 
   const [createCustomer, { loading: creating }] = useCreateCustomerMutation();
   const [updateCustomer, { loading: updating }] = useUpdateCustomerMutation();
@@ -372,6 +376,18 @@ export default function Customers() {
                 })}
               </TableBody>
             </Table>
+          )}
+          {!loading && !hasSearchTerm && customers.length > 0 && (
+            <Pagination
+              currentPage={page}
+              totalItems={totalItems}
+              itemsPerPage={limit}
+              onPageChange={setPage}
+              onItemsPerPageChange={(newLimit) => {
+                setLimit(newLimit);
+                setPage(1);
+              }}
+            />
           )}
         </CardContent>
       </Card>

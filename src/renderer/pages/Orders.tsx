@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Pagination } from '@/components/ui/pagination';
 import {
   Table,
   TableBody,
@@ -72,6 +73,8 @@ const ORDER_WIZARD_STEPS = [
 export default function Orders() {
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
 
@@ -86,7 +89,11 @@ export default function Orders() {
   const { formatDual } = useCurrency();
 
   const { data: ordersData, loading, refetch } = useGetOrdersQuery({
-    variables: { filter: statusFilter && statusFilter !== 'all' ? { status: statusFilter } : undefined },
+    variables: {
+      filter: statusFilter && statusFilter !== 'all' ? { status: statusFilter } : undefined,
+      page,
+      limit,
+    },
   });
 
   const { data: customersData } = useGetCustomersQuery();
@@ -100,6 +107,7 @@ export default function Orders() {
   const orders = ordersData?.orders?.orders || [];
   const customers = customersData?.customers?.customers || [];
   const products = productsData?.products?.products || [];
+  const totalItems = ordersData?.orders?.length || 0;
 
   const handleOpenCreateDialog = () => {
     setIsCreateDialogOpen(true);
@@ -367,6 +375,18 @@ export default function Orders() {
                 })}
               </TableBody>
             </Table>
+          )}
+          {!loading && orders.length > 0 && (
+            <Pagination
+              currentPage={page}
+              totalItems={totalItems}
+              itemsPerPage={limit}
+              onPageChange={setPage}
+              onItemsPerPageChange={(newLimit) => {
+                setLimit(newLimit);
+                setPage(1);
+              }}
+            />
           )}
         </CardContent>
       </Card>
