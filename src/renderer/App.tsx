@@ -89,42 +89,6 @@ class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryStat
 }
 
 function App() {
-  if (!CLERK_PUBLISHABLE_KEY) {
-    return (
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '100vh',
-          flexDirection: 'column',
-          gap: '1rem',
-          padding: '2rem',
-          fontFamily: 'system-ui, sans-serif',
-        }}
-      >
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ef4444' }}>
-          Configuration Error
-        </h1>
-        <p style={{ color: '#6b7280', textAlign: 'center' }}>
-          Missing Clerk Publishable Key. Please set VITE_CLERK_PUBLISHABLE_KEY in your environment
-          variables.
-        </p>
-        <pre
-          style={{
-            background: '#f3f4f6',
-            padding: '1rem',
-            borderRadius: '0.5rem',
-            fontSize: '0.875rem',
-            color: '#374151',
-          }}
-        >
-          VITE_CLERK_PUBLISHABLE_KEY=your_key_here
-        </pre>
-      </div>
-    );
-  }
-
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light" storageKey="erp-ui-theme">

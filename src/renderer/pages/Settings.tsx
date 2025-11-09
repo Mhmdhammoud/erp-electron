@@ -1,13 +1,19 @@
 import { useState } from 'react';
 import { useTenant } from '../hooks/useTenant';
+import { useUpload } from '../hooks/useUpload';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
+import { FileUploader } from '../components/common/FileUploader';
 import { Building2, Palette, DollarSign } from 'lucide-react';
+import { useToast } from '../hooks/use-toast';
 
 export default function Settings() {
   const { tenant, loading } = useTenant();
+  const { handleUpload, uploadProgress, isUploading, error } = useUpload();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('business');
+  const [logoUrl, setLogoUrl] = useState<string | undefined>(tenant?.branding?.logoUrl);
 
   const tabs = [
     { id: 'business', name: 'Business Information', icon: Building2 },
@@ -88,12 +94,37 @@ export default function Settings() {
           <form className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Logo URL
+                Company Logo
               </label>
-              <Input
-                defaultValue={tenant?.branding?.logoUrl}
-                placeholder="https://example.com/logo.png"
+              <FileUploader
+                id="company-logo"
+                accept="image"
+                variant="dropzone"
+                value={logoUrl || tenant?.branding?.logoUrl}
+                onChange={async (file) => {
+                  try {
+                    const url = await handleUpload(file, 'company-logo');
+                    setLogoUrl(url);
+                    toast({
+                      title: 'Success',
+                      description: 'Logo uploaded successfully',
+                    });
+                  } catch (err: any) {
+                    toast({
+                      variant: 'destructive',
+                      title: 'Error',
+                      description: err.message || 'Failed to upload logo',
+                    });
+                  }
+                }}
+                onRemove={() => setLogoUrl(undefined)}
+                progress={uploadProgress['company-logo'] || 0}
+                isUploading={isUploading}
+                showPreview={true}
               />
+              {error && (
+                <p className="text-sm text-red-600 mt-2">{error}</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
