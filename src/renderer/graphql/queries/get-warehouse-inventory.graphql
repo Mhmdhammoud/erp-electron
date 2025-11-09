@@ -1,0 +1,23 @@
+query GetWarehouseInventory($warehouseId: ID!, $page: Int, $limit: Int) {
+  warehouseInventory(warehouseId: $warehouseId, page: $page, limit: $limit) {
+    inventories {
+      _id
+      warehouse_id
+      product_id
+      quantity
+      reserved_quantity
+      available_quantity
+      location
+      last_restocked_at
+      createdAt
+      updatedAt
+    }
+    length
+    page
+    limit
+    error {
+      field
+      message
+    }
+  }
+}

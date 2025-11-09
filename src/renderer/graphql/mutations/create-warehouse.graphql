@@ -1,0 +1,22 @@
+mutation CreateWarehouse($input: CreateWarehouseInput!) {
+  createWarehouse(input: $input) {
+    warehouse {
+      _id
+      name
+      code
+      address {
+        street
+        city
+        state
+        postal_code
+        country
+      }
+      status
+      is_primary
+    }
+    error {
+      field
+      message
+    }
+  }
+}

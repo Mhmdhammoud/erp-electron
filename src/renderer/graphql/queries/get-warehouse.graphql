@@ -1,0 +1,49 @@
+query GetWarehouse($id: ID!) {
+  warehouse(id: $id) {
+    warehouse {
+      _id
+      name
+      code
+      address {
+        street
+        city
+        state
+        postal_code
+        country
+        coordinates {
+          latitude
+          longitude
+        }
+      }
+      contact {
+        name
+        phone
+        email
+      }
+      capacity {
+        total_sqft
+        storage_units
+        max_pallets
+      }
+      operating_hours {
+        monday { open close }
+        tuesday { open close }
+        wednesday { open close }
+        thursday { open close }
+        friday { open close }
+        saturday { open close }
+        sunday { open close }
+      }
+      status
+      is_primary
+      created_by
+      updated_by
+      createdAt
+      updatedAt
+    }
+    error {
+      field
+      message
+    }
+  }
+}

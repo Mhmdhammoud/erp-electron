@@ -1,0 +1,14 @@
+mutation TransferStock($input: TransferStockInput!) {
+  transferStock(input: $input) {
+    inventory {
+      _id
+      warehouse_id
+      product_id
+      quantity
+    }
+    error {
+      field
+      message
+    }
+  }
+}
