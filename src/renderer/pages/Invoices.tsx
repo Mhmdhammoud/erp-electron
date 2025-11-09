@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Pagination } from '@/components/ui/pagination';
 import {
   Table,
   TableBody,
@@ -33,9 +34,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Plus, Filter, DollarSign, FileText, AlertCircle, Receipt } from 'lucide-react';
 import { useCurrency } from '../hooks/useCurrency';
 import {
-  // useGetInvoicesQuery,
-  // useCreateInvoiceMutation,
-  // useRecordPaymentMutation,
+  useGetInvoicesQuery,
+  useCreateInvoiceMutation,
+  useRecordPaymentMutation,
   useGetOrdersQuery,
   useGetCustomersQuery,
 } from '../types/generated';
@@ -45,6 +46,8 @@ import { PaymentStatus, PaymentMethod } from '../utils/constants';
 export default function Invoices() {
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
@@ -63,27 +66,24 @@ export default function Invoices() {
   const { toast } = useToast();
   const { formatDual } = useCurrency();
 
-  // TODO: Uncomment when types are regenerated
-  // const { data: invoicesData, loading, refetch } = useGetInvoicesQuery({
-  //   variables: { filter: statusFilter && statusFilter !== 'all' ? { status: statusFilter } : undefined },
-  // });
-  const invoicesData = { invoices: { invoices: [] } };
-  const loading = false;
-  const refetch = () => Promise.resolve();
+  const { data: invoicesData, loading, refetch } = useGetInvoicesQuery({
+    variables: {
+      filter: statusFilter && statusFilter !== 'all' ? { payment_status: statusFilter } : undefined,
+      page,
+      limit,
+    },
+  });
 
   const { data: ordersData } = useGetOrdersQuery();
   const { data: customersData } = useGetCustomersQuery();
 
-  // const [createInvoice, { loading: creating }] = useCreateInvoiceMutation();
-  // const [recordPayment, { loading: recording }] = useRecordPaymentMutation();
-  const createInvoice = async () => ({ data: null });
-  const recordPayment = async () => ({ data: null });
-  const creating = false;
-  const recording = false;
+  const [createInvoice, { loading: creating }] = useCreateInvoiceMutation();
+  const [recordPayment, { loading: recording }] = useRecordPaymentMutation();
 
   const invoices = invoicesData?.invoices?.invoices || [];
   const orders = ordersData?.orders?.orders || [];
   const customers = customersData?.customers?.customers || [];
+  const totalItems = invoicesData?.invoices?.length || 0;
 
   const handleOpenCreateDialog = () => {
     setIsCreateDialogOpen(true);
@@ -198,7 +198,7 @@ export default function Invoices() {
       const result = await recordPayment({
         variables: {
           input: {
-            invoice_id: selectedInvoice.id,
+            invoice_id: selectedInvoice._id,
             amount_usd: amount,
             payment_method: paymentMethod,
             notes: paymentNotes || null,
@@ -251,7 +251,7 @@ export default function Invoices() {
   };
 
   const selectedOrder =
-    selectedOrderId === 'none' ? null : orders.find((o: any) => o.id === selectedOrderId);
+    selectedOrderId === 'none' ? null : orders.find((o: any) => o._id === selectedOrderId);
 
   return (
     <div className="space-y-6">
@@ -322,9 +322,9 @@ export default function Invoices() {
                   const isOverdue = new Date(invoice.due_date) < new Date() && remaining > 0;
 
                   return (
-                    <TableRow key={invoice.id}>
+                    <TableRow key={invoice._id}>
                       <TableCell className="font-mono text-sm">
-                        {invoice.invoice_number || invoice.id.slice(0, 8)}
+                        {invoice.invoice_number || invoice._id.slice(0, 8)}
                       </TableCell>
                       <TableCell className="font-medium">{customer?.name || 'Unknown'}</TableCell>
                       <TableCell className="font-medium">{totalUsd}</TableCell>
@@ -369,6 +369,18 @@ export default function Invoices() {
               </TableBody>
             </Table>
           )}
+          {!loading && invoices.length > 0 && (
+            <Pagination
+              currentPage={page}
+              totalItems={totalItems}
+              itemsPerPage={limit}
+              onPageChange={setPage}
+              onItemsPerPageChange={(newLimit) => {
+                setLimit(newLimit);
+                setPage(1);
+              }}
+            />
+          )}
         </CardContent>
       </Card>
 
@@ -396,8 +408,8 @@ export default function Invoices() {
                     .map((order: any) => {
                       const customer = customers.find((c: any) => c._id === order.customer_id);
                       return (
-                        <SelectItem key={order.id} value={order.id}>
-                          Order {order.id.slice(0, 8)} - {customer?.name || 'Unknown'} - $
+                        <SelectItem key={order._id} value={order._id}>
+                          Order {order._id.slice(0, 8)} - {customer?.name || 'Unknown'} - $
                           {order.total_usd.toFixed(2)}
                         </SelectItem>
                       );
@@ -498,7 +510,7 @@ export default function Invoices() {
             <DialogTitle>Record Payment</DialogTitle>
             <DialogDescription>
               Record a payment for invoice{' '}
-              {selectedInvoice?.invoice_number || selectedInvoice?.id.slice(0, 8)}
+              {selectedInvoice?.invoice_number || selectedInvoice?._id.slice(0, 8)}
             </DialogDescription>
           </DialogHeader>
 

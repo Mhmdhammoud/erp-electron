@@ -17,7 +17,7 @@ import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Receipt } from 'lucide-react';
 import { useCurrency } from '../hooks/useCurrency';
 import {
-  // useCreateInvoiceMutation,
+  useCreateInvoiceMutation,
   useGetOrdersQuery,
   useGetCustomersQuery,
 } from '../types/generated';
@@ -36,13 +36,7 @@ export default function InvoiceCreate() {
   const { data: ordersData } = useGetOrdersQuery();
   const { data: customersData } = useGetCustomersQuery();
 
-  // TODO: Uncomment when types are regenerated
-  // const [createInvoice, { loading: creating }] = useCreateInvoiceMutation();
-  const createInvoice = async (options: any) => {
-    console.log('Create invoice called with:', options);
-    return { data: null };
-  };
-  const creating = false;
+  const [createInvoice, { loading: creating }] = useCreateInvoiceMutation();
 
   const orders = ordersData?.orders?.orders || [];
   const customers = customersData?.customers?.customers || [];
