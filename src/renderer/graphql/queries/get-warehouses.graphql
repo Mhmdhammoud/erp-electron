@@ -1,0 +1,43 @@
+query GetWarehouses($filter: WarehouseFilterInput, $page: Int, $limit: Int) {
+  warehouses(filter: $filter, page: $page, limit: $limit) {
+    warehouses {
+      _id
+      name
+      code
+      address {
+        street
+        city
+        state
+        postal_code
+        country
+        coordinates {
+          latitude
+          longitude
+        }
+      }
+      contact {
+        name
+        phone
+        email
+      }
+      capacity {
+        total_sqft
+        storage_units
+        max_pallets
+      }
+      status
+      is_primary
+      created_by
+      updated_by
+      createdAt
+      updatedAt
+    }
+    length
+    page
+    limit
+    error {
+      field
+      message
+    }
+  }
+}

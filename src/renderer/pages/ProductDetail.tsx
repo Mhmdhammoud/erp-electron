@@ -4,7 +4,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Edit, Trash, Package2, DollarSign, AlertCircle } from 'lucide-react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { ArrowLeft, Edit, Trash, Package2, DollarSign, AlertCircle, Warehouse } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,7 +24,11 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useState } from 'react';
-import { useGetProductQuery, useDeleteProductMutation } from '../types/generated';
+import {
+  useGetProductQuery,
+  useDeleteProductMutation,
+  useGetProductInventoryDistributionQuery,
+} from '../types/generated';
 import { useToast } from '../hooks/use-toast';
 import { useCurrency } from '../hooks/useCurrency';
 
@@ -32,9 +44,18 @@ export default function ProductDetail() {
     skip: !id,
   });
 
+  const {
+    data: inventoryData,
+    loading: inventoryLoading,
+  } = useGetProductInventoryDistributionQuery({
+    variables: { productId: id! },
+    skip: !id,
+  });
+
   const [deleteProduct, { loading: deleting }] = useDeleteProductMutation();
 
   const product = data?.product?.product;
+  const inventoryDistribution = inventoryData?.productInventoryDistribution?.inventories || [];
 
   const handleDelete = async () => {
     if (!product) return;
@@ -248,6 +269,82 @@ export default function ProductDetail() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Warehouse Inventory Distribution */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Warehouse className="h-5 w-5" />
+            Warehouse Inventory Distribution
+          </CardTitle>
+          <CardDescription>
+            Product availability across all warehouse locations
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {inventoryLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : inventoryDistribution.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Warehouse</TableHead>
+                  <TableHead>Code</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead className="text-right">Total Quantity</TableHead>
+                  <TableHead className="text-right">Reserved</TableHead>
+                  <TableHead className="text-right">Available</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {inventoryDistribution.map((inventory) => (
+                  <TableRow
+                    key={inventory._id}
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => navigate(`/warehouses/${inventory.warehouse_id}`)}
+                  >
+                    <TableCell className="font-medium">
+                      <div className="flex flex-col">
+                        <span>{inventory.warehouse?.name || 'Unknown Warehouse'}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {inventory.warehouse?.address?.city}, {inventory.warehouse?.address?.country}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-mono text-sm">
+                      {inventory.warehouse?.code || 'N/A'}
+                    </TableCell>
+                    <TableCell>{inventory.location || 'N/A'}</TableCell>
+                    <TableCell className="text-right font-semibold">
+                      {inventory.quantity}
+                    </TableCell>
+                    <TableCell className="text-right text-muted-foreground">
+                      {inventory.reserved_quantity || 0}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Badge variant={inventory.available_quantity > 0 ? 'default' : 'secondary'}>
+                        {inventory.available_quantity || inventory.quantity}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="text-center py-8">
+              <Warehouse className="h-12 w-12 text-muted-foreground mx-auto mb-2 opacity-50" />
+              <p className="text-muted-foreground">
+                No warehouse inventory data available for this product
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">
+                This product may not be stored in any warehouses yet
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>

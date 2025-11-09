@@ -1,0 +1,11 @@
+mutation DeleteWarehouse($id: ID!) {
+  deleteWarehouse(id: $id) {
+    warehouse {
+      _id
+    }
+    error {
+      field
+      message
+    }
+  }
+}
