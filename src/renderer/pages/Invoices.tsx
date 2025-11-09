@@ -40,6 +40,7 @@ import {
   Receipt,
   Trash,
   Search,
+  Download,
 } from 'lucide-react';
 import { useCurrency } from '../hooks/useCurrency';
 import {
@@ -294,6 +295,52 @@ export default function Invoices() {
     return date.toISOString().split('T')[0];
   };
 
+  const handleExportCSV = () => {
+    if (invoices.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'No Data',
+        description: 'There are no invoices to export',
+      });
+      return;
+    }
+
+    // CSV headers
+    const headers = ['Invoice Number', 'Customer', 'Total (USD)', 'Paid (USD)', 'Payment Status', 'Due Date'];
+
+    // CSV rows
+    const rows = invoices.map((invoice: any) => [
+      invoice._id || '',
+      invoice.customer?.name || '',
+      invoice.total_amount_usd || 0,
+      invoice.paid_amount_usd || 0,
+      invoice.payment_status || '',
+      invoice.due_date || '',
+    ]);
+
+    // Combine headers and rows
+    const csvContent = [
+      headers.join(','),
+      ...rows.map((row: any[]) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
+    ].join('\n');
+
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `invoices-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: 'Success',
+      description: `Exported ${invoices.length} invoices to CSV`,
+    });
+  };
+
   const selectedOrder =
     selectedOrderId === 'none' ? null : orders.find((o: any) => o._id === selectedOrderId);
 
@@ -306,7 +353,7 @@ export default function Invoices() {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <Filter className="w-4 h-4 text-muted-foreground" />
               <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -322,10 +369,16 @@ export default function Invoices() {
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={() => navigate('/invoices/new')}>
-              <Plus className="w-4 h-4 mr-2" />
-              Create Invoice
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={handleExportCSV} disabled={invoices.length === 0}>
+                <Download className="w-4 h-4 mr-2" />
+                Export CSV
+              </Button>
+              <Button onClick={() => navigate('/invoices/new')}>
+                <Plus className="w-4 h-4 mr-2" />
+                Create Invoice
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>

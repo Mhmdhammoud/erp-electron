@@ -42,6 +42,7 @@ import {
   FileText,
   ChevronRight,
   ChevronLeft,
+  Download,
 } from 'lucide-react';
 import { useCurrency } from '../hooks/useCurrency';
 import {
@@ -303,6 +304,55 @@ export default function Orders() {
     setOrderToDelete(null);
   };
 
+  const handleExportCSV = () => {
+    if (orders.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'No Data',
+        description: 'There are no orders to export',
+      });
+      return;
+    }
+
+    // CSV headers
+    const headers = ['Order Number', 'Customer', 'Total (USD)', 'Status', 'Currency', 'Order Date'];
+
+    // CSV rows
+    const rows = orders.map((order: any) => {
+      const customer = customers.find((c: any) => c._id === order.customer_id);
+      return [
+        order._id || '',
+        customer?.name || '',
+        order.total_usd || 0,
+        order.status || '',
+        order.currency_used || '',
+        new Date().toISOString().split('T')[0], // Add actual order date if available
+      ];
+    });
+
+    // Combine headers and rows
+    const csvContent = [
+      headers.join(','),
+      ...rows.map((row: any[]) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
+    ].join('\n');
+
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `orders-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: 'Success',
+      description: `Exported ${orders.length} orders to CSV`,
+    });
+  };
+
   const selectedCustomer = customers.find((c: any) => c._id === selectedCustomerId);
 
   return (
@@ -314,7 +364,7 @@ export default function Orders() {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <Filter className="w-4 h-4 text-muted-foreground" />
               <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -331,10 +381,16 @@ export default function Orders() {
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={() => navigate('/orders/new')}>
-              <Plus className="w-4 h-4 mr-2" />
-              Create Order
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={handleExportCSV} disabled={orders.length === 0}>
+                <Download className="w-4 h-4 mr-2" />
+                Export CSV
+              </Button>
+              <Button onClick={() => navigate('/orders/new')}>
+                <Plus className="w-4 h-4 mr-2" />
+                Create Order
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
